@@ -1,0 +1,119 @@
+\documentclass{article}
+%To instruct arXiv for using pdfLatex (Must be in the first 5 lines to take effect -- no ps will be generated for download.)
+\pdfoutput=1
+
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath, amsthm, amssymb, mathtools}
+\usepackage{amsfonts}
+%\usepackage{bbm}
+\usepackage{booktabs}
+\usepackage{color}
+\usepackage{enumitem}
+\usepackage{inconsolata}
+\usepackage{mleftright}\mleftright
+\usepackage{graphicx}
+\usepackage{caption}
+%\usepackage{fullpage}
+%\usepackage{tikz,tikz-cd}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{hyperref}
+\usepackage{thmtools}
+%\usepackage{thm-restate}
+\usepackage{url}
+\usepackage{verbatim}
+\usepackage[linesnumbered,ruled,procnumbered]{algorithm2e}
+\usepackage[nameinlink,capitalize]{cleveref}
+
+%\declaretheorem[numberwithin=section]{theorem}
+\declaretheorem{theorem}
+\declaretheorem[sibling=theorem]{lemma}
+\declaretheorem[sibling=theorem]{corollary}
+\declaretheorem[sibling=theorem,name=Proposition]{prop}
+\theoremstyle{definition}
+\declaretheorem[sibling=theorem,name=Problem]{prob}
+\declaretheorem[sibling=theorem]{definition}
+\declaretheorem[sibling=theorem]{remark}
+\declaretheorem[sibling=theorem]{claim}
+
+\DeclareMathOperator{\poly}{poly}
+\DeclareMathOperator{\polylog}{polylog}
+\DeclareMathOperator{\rank}{rank}
+\DeclareMathOperator{\Tr}{Tr}
+\DeclareMathOperator{\E}{E}
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+\newcommand{\eps}{\varepsilon}
+
+\begin{document}
+Consider probabilities $\alpha_1,\ldots,\alpha_d$, and assume that $\alpha_i \leq B$ for all $i \in [d]$.
+
+\begin{theorem}
+Suppose that, with probability $\geq 1-\delta$, for all $k \in [K]$,
+\begin{align*}
+    \abs*{\Big(\sum_{i=1}^d \alpha_i^k\Big) - \sum_{i=1}^d g_{k,x_j}(\hat{p}_{i,2})} > VB^k.
+\end{align*}
+then
+\begin{align*}
+    \cdots
+\end{align*}
+\end{theorem}
+
+Note that we think of $\sum_{i=1}^d \alpha_i^k = \int x^k \mu(dx)$ for $\mu$ the discrete distribution that places weight one on each $\alpha_i$.
+(This is kind of a different normalization from how it's defined in HJW.)
+Then with probability $\geq 1-K\delta$ we can find a $\hat{\mu}$ such that, for all $k \in [K]$,
+\begin{align*}
+    \abs*{\int x^k\hat{\mu}(dx) - \int x^k \mu(dx)} \leq 2VB^k.
+\end{align*}
+
+We wish to argue that $\mu$ and $\hat{\mu}$ are always close, in the sense that no 1-Lipschitz function can distinguish the two up to some error.
+Fix a polynomial $P(x) = \sum_{k=0}^K a_kx^k$.
+Then
+\begin{align*}
+    &\abs*{\int f(x)(\mu(dx) - \hat{\mu}(dx))} \\
+    & \leq \abs*{\int (f(x) - P(x))(\mu(dx) - \hat{\mu}(dx))} + \abs*{\int P(x)(\mu(dx) - \hat{\mu}(dx))} \\
+    & \leq \int \abs{f(x) - P(x)}(\mu(dx) + \hat{\mu}(dx)) + \sum_{k=1}^K \abs{a_k}\cdot 2 VB^k \\
+    & \leq \int \abs{f(x) - P(x)}(\mu(dx) + \hat{\mu}(dx)) + 2V \sum_{k=1}^K \abs{a_k}B^k
+\end{align*}
+
+We take $P := \arg\min_Q \max_x |Q(x) - f(x)|$.
+Using Jackson's inequality (Lemma 22), for a constant C,
+\begin{align*}
+    \int \abs{f(x) - P(x)}(\mu(dx) - \hat{\mu}(dx))
+    & \leq \frac{C\sqrt{B}}{K}\int \sqrt{x}(\mu(dx) + \hat{\mu}(dx))
+\end{align*}
+To upper bound the second part, we need upper bounds on the coefficients.
+\begin{align*}
+    |P(x)| &\leq |P(x) - f(x)| + |f(x)|
+    \leq \frac{CB}{K} + B
+\end{align*}
+so, using coefficient bounds (Lemma 27), for all $k \in [K]$
+\begin{align*}
+    |a_k| &\leq 2^{7K/2 + 1}B\Big(1 + \frac CK\Big)\Big(\frac{B}{2}\Big)^{-k} \\
+    &= 2^{9K/2 + 1}\Big(1 + \frac CK\Big)B^{1-k}
+\end{align*}
+and
+\begin{align*}
+    2V\sum_{k=1}^K \abs{a_k}B^k
+    &\leq 2V\sum_{k=1}^K 2^{9K/2 + 1}\Big(1 + \frac CK\Big)B^{1-k}B^k \\
+    &\leq 2V(1+C)2^{9K/2 + 2}B
+\end{align*}
+
+\begin{align*}
+    &\E_P \|P^< - \hat{P}^<\|_1 \\
+    &= \E_P W(\mu, \hat{\mu}) = \E_P \sup_{f : \|f\|_{\text{Lip}} \leq 1} \int_{\mathbb{R}}f(x)(\mu(dx) - \hat{\mu}(dx)) \\
+    &= \E_P \sup_{f : \|f\|_{\text{Lip}} \leq 1, f(0) = 0} \int_{\mathbb{R}}f(x)(\mu(dx) - \hat{\mu}(dx)) \\
+    &\leq \Big(\frac{C\sqrt{B}}{K}\int \sqrt{x}(\mu(dx) + \hat{\mu}(dx)) + 2V(1+C)2^{9K/2 + 2}B\Big) + (\max \|P^< - \hat{P}^<\|_1)(\Pr[\text{failure}]) \\
+    &\leq \Big(\frac{C\sqrt{B}}{K}\int \sqrt{x}(\mu(dx) + \hat{\mu}(dx)) + 2V(1+C)2^{9K/2 + 2}B\Big) + 2\delta \\
+    &\lesssim \Big(\frac{\sqrt{B}}{K}\int \sqrt{x}(\mu(dx) + \hat{\mu}(dx)) + 2^{9K/2}VB\Big) + 2\delta \\
+    &\leq \Big(\frac{\sqrt{Bd}}{K}\sqrt{\int x(\mu(dx) + \hat{\mu}(dx))} + 2^{9K/2}VB\Big) + 2\delta \\
+    &\leq \Big(\frac{\sqrt{Bd}}{K}\sqrt{2 + \abs{\int x (\mu(dx) - \hat{\mu}(dx))}} + 2^{9K/2}VB\Big) + 2\delta \\
+    &\leq \Big(\frac{\sqrt{Bd}}{K}\sqrt{2 + 2VB} + 2^{9K/2}VB\Big) + 2\delta \\
+    &\lesssim \frac{\sqrt{Bd}}{K} + 2^{9K/2}VB + 2\delta
+    \intertext{Taking $K = c\ln n$ for sufficiently small $c$ and $B = O(\frac{\ln n}{n})$:}
+    &\lesssim \sqrt{\frac{d}{n\ln n}} + n^{\eps-1}V + 2\delta.
+\end{align*}
+(Assuming that $VB = O(1)$.)
+So, if we are in the same parameter setting as HJW, we'd want to take $V = d^{1-O(\eps)}$ (HJW gets $V = \sqrt{d}$).
+
+\end{document}
