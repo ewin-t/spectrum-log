@@ -5,8 +5,9 @@
 \usepackage[utf8]{inputenc}
 \usepackage{amsmath, amsthm, amssymb, mathtools}
 \usepackage{amsfonts}
-%\usepackage{bbm}
+\usepackage{bm}
 \usepackage{booktabs}
+\usepackage{cite}
 \usepackage{color}
 \usepackage{enumitem}
 \usepackage{inconsolata}
@@ -41,27 +42,54 @@
 \DeclareMathOperator{\rank}{rank}
 \DeclareMathOperator{\Tr}{Tr}
 \DeclareMathOperator{\E}{E}
+\DeclareMathOperator{\Var}{Var}
 \DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
 \DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
 \newcommand{\eps}{\varepsilon}
+\newcommand{\ewin}[1]{\textrm{\textcolor[RGB]{0,135,219}{[Ewin: #1]}}}
 
 \begin{document}
-Consider probabilities $\alpha_1,\ldots,\alpha_d$, and assume that $\alpha_i \leq B$ for all $i \in [d]$.
+
+Consider probabilities $\alpha_1,\ldots,\alpha_d$.
+Note that we'll often think of $\mu$ the discrete distribution that places weight one on each $\alpha_i$.
+(This is kind of a different normalization from how it's defined in HJW.)
+
+Our goal will be to use weak Schur sampling to estimate
+\begin{align*}
+    \int x^k \mu(dx) = \sum_{i=1}^d \alpha_i^k,
+\end{align*}
+(where bounds on error come from \cite{aisw19}).
+Subsequently, we use these estimates to perform the ``local moment matching'' of \cite{hjw18} to hopefully get a better sample complexity.
+
+\section{Quantum component}
+
+\begin{lemma}[{\cite[Lemma~9]{aisw19}}]
+    There is a constant $C_\alpha$ depending only on $\alpha$ such that
+    \begin{align}
+        \E[p_{(k)}^{\#}(\bm{\lambda})] &= n^{\underline{k}}\int x^k\mu(dx) \\
+        \Var[p_{(k)}^{\#}(\bm{\lambda})] &= C_k n^{k}\Big(1 + n^{k - 1}\int x^{2k-1}\mu(dx)\Big)
+    \end{align}
+\end{lemma}
+
+Here, $p_{(k)}^\#(\bm{\lambda})$ is the estimator arising from what I think is the naive thing, which is writing the power sum (which they call $M_k(\alpha)$) in the Schur polynomial basis $\{s_\lambda(\alpha)\}$ and using the coefficients to renormalize the probabilities such that the estimator is unbiased. $n^{\underline{k}}$ is the falling power $(n)(n-1)\cdots(n-k+1)$.
+
+\section{Classical component}
+
+Trying to interpret the analysis in \cite{hjw18}.
 
 \begin{theorem}
 Suppose that, with probability $\geq 1-\delta$, for all $k \in [K]$,
 \begin{align*}
     \abs*{\Big(\sum_{i=1}^d \alpha_i^k\Big) - \sum_{i=1}^d g_{k,x_j}(\hat{p}_{i,2})} > VB^k.
 \end{align*}
-then
+Then for all $K$, we can find a $\hat{\alpha}$ such that \ewin{needs optimization, maybe?}
 \begin{align*}
-    \cdots
+    \E[\|\alpha^< - \hat{\alpha}^<\|_1] \lesssim \frac{\sqrt{Bd}}{K} + 2^{9K/2}VB + \delta
 \end{align*}
 \end{theorem}
 
-Note that we think of $\sum_{i=1}^d \alpha_i^k = \int x^k \mu(dx)$ for $\mu$ the discrete distribution that places weight one on each $\alpha_i$.
-(This is kind of a different normalization from how it's defined in HJW.)
-Then with probability $\geq 1-K\delta$ we can find a $\hat{\mu}$ such that, for all $k \in [K]$,
+\begin{proof}
+From the proof assumption, with probability $\geq 1-\delta$ we can find a $\hat{\mu}$ such that, for all $k \in [K]$,
 \begin{align*}
     \abs*{\int x^k\hat{\mu}(dx) - \int x^k \mu(dx)} \leq 2VB^k.
 \end{align*}
@@ -115,5 +143,9 @@ and
 \end{align*}
 (Assuming that $VB = O(1)$.)
 So, if we are in the same parameter setting as HJW, we'd want to take $V = d^{1-O(\eps)}$ (HJW gets $V = \sqrt{d}$).
+\end{proof}
+
+\bibliographystyle{alpha}
+\bibliography{main.bib}
 
 \end{document}
