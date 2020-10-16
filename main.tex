@@ -64,7 +64,7 @@ Subsequently, we use these estimates to perform the ``local moment matching'' of
 \section{Quantum component}
 
 \begin{lemma}[{\cite[Lemma~9]{aisw19}}]
-    There is a constant $C_\alpha$ depending only on $\alpha$ such that
+    There is a constant $C_k$ depending only on $k$ such that
     \begin{align}
         \E[p_{(k)}^{\#}(\bm{\lambda})] &= n^{\underline{k}}\int x^k\mu(dx) \\
         \Var[p_{(k)}^{\#}(\bm{\lambda})] &= C_k n^{k}\Big(1 + n^{k - 1}\int x^{2k-1}\mu(dx)\Big)
@@ -78,23 +78,37 @@ Here, $p_{(k)}^\#(\bm{\lambda})$ is the estimator arising from what I think is t
 Trying to interpret the analysis in \cite{hjw18}.
 
 \begin{theorem}
-Suppose that, with probability $\geq 1-\delta$, for all $k \in [K]$,
+Fix some $K \in \mathbb{N}$ \ewin{needs optimization, maybe?}.
+Suppose that, with probability $\geq 1-\delta$, we have an estimate $\hat{m}_k$ for all $k \in [K]$ such that
 \begin{align*}
-    \abs*{\Big(\sum_{i=1}^d \alpha_i^k\Big) - \sum_{i=1}^d g_{k,x_j}(\hat{p}_{i,2})} > VB^k.
+    \abs[\Big]{\hat{m}_k - \int x^k \mu(dx)} < VB^k.
 \end{align*}
-Then for all $K$, we can find a $\hat{\alpha}$ such that \ewin{needs optimization, maybe?}
+Then we can find a $\hat{\alpha}$ such that
 \begin{align*}
     \E[\|\alpha^< - \hat{\alpha}^<\|_1] \lesssim \frac{\sqrt{Bd}}{K} + 2^{9K/2}VB + \delta
 \end{align*}
 \end{theorem}
 
 \begin{proof}
-From the proof assumption, with probability $\geq 1-\delta$ we can find a $\hat{\mu}$ such that, for all $k \in [K]$,
+Recall the derivation done in \cite{hjw18}: consider our given probability vector $\alpha = (\alpha_1,\ldots,\alpha_d)$, along with an estimate probability vector $\beta = (\beta_1,\ldots,\beta_d)$ that is formed by considering a measure $\nu$ and discretizing it as in \cite[Definition~8]{hjw18}.
+Then
 \begin{align*}
-    \abs*{\int x^k\hat{\mu}(dx) - \int x^k \mu(dx)} \leq 2VB^k.
+    \frac1d\E[\|\alpha^< - \beta^<\|_1] = \E[W(\mu, \mu_\beta)] = W(\mu, \nu) = \sup_{f : \|f\|_{\mathrm{Lip}} \leq 1} \int f(x)(\mu(dx) - \nu(dx)).
 \end{align*}
+So, the goal is to find some measure $\nu$ (not necessarily discrete) that cannot be distinguished from the target distribution $\mu$ via 1-Lipschitz functions.
 
-We wish to argue that $\mu$ and $\hat{\mu}$ are always close, in the sense that no 1-Lipschitz function can distinguish the two up to some error.
+Let $\hat{\mu}$ be any measure satisfying $\hat{\mu}([0,1]) = \mu([0,1]) = n$ and
+\begin{align*}
+    \abs[\Big]{\hat{m}_k - \int  x^k \hat{\mu}(dx)} < VB^k
+\end{align*}
+for all $k \in [K]$.
+From the proof assumption, such a $\hat{\mu}$ exists with probability $\geq 1-\delta$, and by triangle inequality this $\hat{\mu}$ satisfies
+\begin{equation} \label{eqn:moments-good}
+    \abs*{\int x^k\hat{\mu}(dx) - \int x^k \mu(dx)} < 2VB^k.
+\end{equation}
+This will be our proposed estimate measure.
+So, consider some $f: \mathbb{R} \to \mathbb{R}$ that is 1-Lipschitz satisfying $f(0) = 0$ (without loss of generality).
+We will take a polynomial approximation to $f$.
 Fix a polynomial $P(x) = \sum_{k=0}^K a_kx^k$.
 Then
 \begin{align*}
@@ -107,8 +121,14 @@ Then
 We take $P := \arg\min_Q \max_x |Q(x) - f(x)|$.
 Using Jackson's inequality (Lemma 22), for a constant C,
 \begin{align*}
-    \int \abs{f(x) - P(x)}(\mu(dx) - \hat{\mu}(dx))
-    & \leq \frac{C\sqrt{B}}{K}\int \sqrt{x}(\mu(dx) + \hat{\mu}(dx))
+    &\int \abs{f(x) - P(x)}(\mu(dx) - \hat{\mu}(dx)) \\
+    &\leq \frac{C\sqrt{B}}{K}\int \sqrt{x}(\mu(dx) + \hat{\mu}(dx)).
+\intertext{Continuing with bounding the first term:}
+    &\leq \frac{C\sqrt{B}}{K} \sqrt{\Big(\int \sqrt{x}^2 (\mu(dx) + \hat{\mu}(dx))\Big)\Big(\int 1^2 (\mu(dx) + \hat{\mu}(dx))\Big)} \tag*{by Cauchy-Schwarz} \\
+    &= \frac{C\sqrt{2Bd}}{K} \sqrt{\int x (\mu(dx) + \hat{\mu}(dx))} \\
+    &= \frac{C\sqrt{2Bd}}{K} \sqrt{\int x (2\mu(dx)) + \int x(\hat{\mu}(dx) - \mu(dx))} \\
+    &= \frac{C\sqrt{2Bd}}{K} \sqrt{2+2BV} \tag*{by \cref{eqn:moments-good}} \\
+    &\lesssim \frac1K\sqrt{Bd+B^2Vd}
 \end{align*}
 To upper bound the second part, we need upper bounds on the coefficients.
 \begin{align*}
@@ -126,18 +146,11 @@ and
     &\leq 2V\sum_{k=1}^K 2^{9K/2 + 1}\Big(1 + \frac CK\Big)B^{1-k}B^k \\
     &\leq 2V(1+C)2^{9K/2 + 2}B
 \end{align*}
-
+Putting everything together, we have
 \begin{align*}
-    &\E_P \|P^< - \hat{P}^<\|_1 \\
-    &= \E_P W(\mu, \hat{\mu}) = \E_P \sup_{f : \|f\|_{\text{Lip}} \leq 1} \int_{\mathbb{R}}f(x)(\mu(dx) - \hat{\mu}(dx)) \\
-    &= \E_P \sup_{f : \|f\|_{\text{Lip}} \leq 1, f(0) = 0} \int_{\mathbb{R}}f(x)(\mu(dx) - \hat{\mu}(dx)) \\
-    &\leq \Big(\frac{C\sqrt{B}}{K}\int \sqrt{x}(\mu(dx) + \hat{\mu}(dx)) + 2V(1+C)2^{9K/2 + 2}B\Big) + (\max \|P^< - \hat{P}^<\|_1)(\Pr[\text{failure}]) \\
-    &\leq \Big(\frac{C\sqrt{B}}{K}\int \sqrt{x}(\mu(dx) + \hat{\mu}(dx)) + 2V(1+C)2^{9K/2 + 2}B\Big) + 2\delta \\
-    &\lesssim \Big(\frac{\sqrt{B}}{K}\int \sqrt{x}(\mu(dx) + \hat{\mu}(dx)) + 2^{9K/2}VB\Big) + 2\delta \\
-    &\leq \Big(\frac{\sqrt{Bd}}{K}\sqrt{\int x(\mu(dx) + \hat{\mu}(dx))} + 2^{9K/2}VB\Big) + 2\delta \\
-    &\leq \Big(\frac{\sqrt{Bd}}{K}\sqrt{2 + \abs{\int x (\mu(dx) - \hat{\mu}(dx))}} + 2^{9K/2}VB\Big) + 2\delta \\
-    &\leq \Big(\frac{\sqrt{Bd}}{K}\sqrt{2 + 2VB} + 2^{9K/2}VB\Big) + 2\delta \\
-    &\lesssim \frac{\sqrt{Bd}}{K} + 2^{9K/2}VB + 2\delta
+    &\E \|\alpha^< - \beta^<\|_1 \\
+    &=\E \sup_{f : \|f\|_{\text{Lip}} \leq 1} \int_{\mathbb{R}}f(x)(\mu(dx) - \hat{\mu}(dx)) \\
+    &\lesssim \Big(\frac1K\sqrt{Bd+B^2Vd} + V2^{9K/2}B\Big) + (\max \|P^< - \hat{P}^<\|_1)(\Pr[\text{alg fails}]) \\
     \intertext{Taking $K = c\ln n$ for sufficiently small $c$ and $B = O(\frac{\ln n}{n})$:}
     &\lesssim \sqrt{\frac{d}{n\ln n}} + n^{\eps-1}V + 2\delta.
 \end{align*}
