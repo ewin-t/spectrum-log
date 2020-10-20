@@ -66,8 +66,8 @@ Subsequently, we use these estimates to perform the ``local moment matching'' of
 \begin{lemma}[{\cite[Lemma~9]{aisw19}}]
     There is a constant $C_k$ depending only on $k$ such that
     \begin{align}
-        \E[p_{(k)}^{\#}(\bm{\lambda})] &= n^{\underline{k}}\int x^k\mu(dx) \\
-        \Var[p_{(k)}^{\#}(\bm{\lambda})] &= C_k n^{k}\Big(1 + n^{k - 1}\int x^{2k-1}\mu(dx)\Big)
+        \E[\frac{1}{n^{\underline{k}}}p_{(k)}^{\#}(\bm{\lambda})] &= \int x^k\mu(dx) \\
+        \Var[\frac{1}{n^{\underline{k}}}p_{(k)}^{\#}(\bm{\lambda})] &= C_k\Big(n^{-k} + n^{-1}\int x^{2k-1}\mu(dx)\Big)
     \end{align}
 \end{lemma}
 
@@ -81,11 +81,11 @@ Trying to interpret the analysis in \cite{hjw18}.
 Fix some $K \in \mathbb{N}$ \ewin{needs optimization, maybe?}.
 Suppose that, with probability $\geq 1-\delta$, we have an estimate $\hat{m}_k$ for all $k \in [K]$ such that
 \begin{align*}
-    \abs[\Big]{\hat{m}_k - \int x^k \mu(dx)} < VB^k.
+    \abs[\Big]{\hat{m}_k - \int x^k \mu(dx)} < V_k.
 \end{align*}
 Then we can find a $\hat{\alpha}$ such that
 \begin{align*}
-    \E[\|\alpha^< - \hat{\alpha}^<\|_1] \lesssim \frac{\sqrt{Bd}}{K} + 2^{9K/2}VB + \delta
+    \E[\|\alpha^< - \hat{\alpha}^<\|_1] \lesssim \frac1K\sqrt{Bd(1+V_1)} + \delta + 2^{9K/2}B\sum B^{-k}V_k
 \end{align*}
 \end{theorem}
 
@@ -93,18 +93,20 @@ Then we can find a $\hat{\alpha}$ such that
 Recall the derivation done in \cite{hjw18}: consider our given probability vector $\alpha = (\alpha_1,\ldots,\alpha_d)$, along with an estimate probability vector $\beta = (\beta_1,\ldots,\beta_d)$ that is formed by considering a measure $\nu$ and discretizing it as in \cite[Definition~8]{hjw18}.
 Then
 \begin{align*}
-    \frac1d\E[\|\alpha^< - \beta^<\|_1] = \E[W(\mu, \mu_\beta)] = W(\mu, \nu) = \sup_{f : \|f\|_{\mathrm{Lip}} \leq 1} \int f(x)(\mu(dx) - \nu(dx)).
+    \E[\|\alpha^< - \beta^<\|_1] &= \E[W(\mu, \mu_\beta)] \tag*{by \cite[Lemma~7]{hjw18}} \\
+    &= W(\mu, \nu) \tag*{by \cite[Lemma~9]{hjw18}}\\
+    &= \sup_{f : \|f\|_{\mathrm{Lip}} \leq 1} \int f(x)(\mu(dx) - \nu(dx)) \tag*{by \cite[Lemma~10]{hjw18}}.
 \end{align*}
 So, the goal is to find some measure $\nu$ (not necessarily discrete) that cannot be distinguished from the target distribution $\mu$ via 1-Lipschitz functions.
 
 Let $\hat{\mu}$ be any measure satisfying $\hat{\mu}([0,1]) = \mu([0,1]) = n$ and
 \begin{align*}
-    \abs[\Big]{\hat{m}_k - \int  x^k \hat{\mu}(dx)} < VB^k
+    \abs[\Big]{\hat{m}_k - \int  x^k \hat{\mu}(dx)} < V_k
 \end{align*}
 for all $k \in [K]$.
 From the proof assumption, such a $\hat{\mu}$ exists with probability $\geq 1-\delta$, and by triangle inequality this $\hat{\mu}$ satisfies
 \begin{equation} \label{eqn:moments-good}
-    \abs*{\int x^k\hat{\mu}(dx) - \int x^k \mu(dx)} < 2VB^k.
+    \abs*{\int x^k\hat{\mu}(dx) - \int x^k \mu(dx)} < 2V_k.
 \end{equation}
 This will be our proposed estimate measure.
 So, consider some $f: \mathbb{R} \to \mathbb{R}$ that is 1-Lipschitz satisfying $f(0) = 0$ (without loss of generality).
@@ -114,12 +116,12 @@ Then
 \begin{align*}
     &\abs*{\int f(x)(\mu(dx) - \hat{\mu}(dx))} \\
     & \leq \abs*{\int (f(x) - P(x))(\mu(dx) - \hat{\mu}(dx))} + \abs*{\int P(x)(\mu(dx) - \hat{\mu}(dx))} \\
-    & \leq \int \abs{f(x) - P(x)}(\mu(dx) + \hat{\mu}(dx)) + \sum_{k=1}^K \abs{a_k}\cdot 2 VB^k \\
-    & \leq \int \abs{f(x) - P(x)}(\mu(dx) + \hat{\mu}(dx)) + 2V \sum_{k=1}^K \abs{a_k}B^k
+    & \leq \int \abs{f(x) - P(x)}(\mu(dx) + \hat{\mu}(dx)) + \sum_{k=1}^K \abs{a_k}\cdot 2 V_k \\
+    & \leq \int \abs{f(x) - P(x)}(\mu(dx) + \hat{\mu}(dx)) + 2\sum_{k=1}^K \abs{a_k}V_k
 \end{align*}
 
 We take $P := \arg\min_Q \max_x |Q(x) - f(x)|$.
-Using Jackson's inequality (Lemma 22), for a constant C,
+Using Jackson's inequality \cite[Lemma~22]{hjw18}, for a constant C,
 \begin{align*}
     &\int \abs{f(x) - P(x)}(\mu(dx) - \hat{\mu}(dx)) \\
     &\leq \frac{C\sqrt{B}}{K}\int \sqrt{x}(\mu(dx) + \hat{\mu}(dx)).
@@ -127,36 +129,57 @@ Using Jackson's inequality (Lemma 22), for a constant C,
     &\leq \frac{C\sqrt{B}}{K} \sqrt{\Big(\int \sqrt{x}^2 (\mu(dx) + \hat{\mu}(dx))\Big)\Big(\int 1^2 (\mu(dx) + \hat{\mu}(dx))\Big)} \tag*{by Cauchy-Schwarz} \\
     &= \frac{C\sqrt{2Bd}}{K} \sqrt{\int x (\mu(dx) + \hat{\mu}(dx))} \\
     &= \frac{C\sqrt{2Bd}}{K} \sqrt{\int x (2\mu(dx)) + \int x(\hat{\mu}(dx) - \mu(dx))} \\
-    &= \frac{C\sqrt{2Bd}}{K} \sqrt{2+2BV} \tag*{by \cref{eqn:moments-good}} \\
-    &\lesssim \frac1K\sqrt{Bd+B^2Vd}
+    &= \frac{C\sqrt{2Bd}}{K} \sqrt{2+2V_1} \tag*{by \cref{eqn:moments-good}} \\
+    &\lesssim \frac1K\sqrt{Bd(1+V_1)}
 \end{align*}
 To upper bound the second part, we need upper bounds on the coefficients.
 \begin{align*}
     |P(x)| &\leq |P(x) - f(x)| + |f(x)|
     \leq \frac{CB}{K} + B
 \end{align*}
-so, using coefficient bounds (Lemma 27), for all $k \in [K]$
+so, using coefficient bounds \cite[Lemma~27]{hjw18}, for all $k \in [K]$
 \begin{align*}
     |a_k| &\leq 2^{7K/2 + 1}B\Big(1 + \frac CK\Big)\Big(\frac{B}{2}\Big)^{-k} \\
-    &= 2^{9K/2 + 1}\Big(1 + \frac CK\Big)B^{1-k}
+    &\leq 2^{9K/2 + 1}\Big(1 + \frac CK\Big)B^{1-k}
 \end{align*}
 and
 \begin{align*}
-    2V\sum_{k=1}^K \abs{a_k}B^k
-    &\leq 2V\sum_{k=1}^K 2^{9K/2 + 1}\Big(1 + \frac CK\Big)B^{1-k}B^k \\
-    &\leq 2V(1+C)2^{9K/2 + 2}B
+    2\sum_{k=1}^K \abs{a_k}V_k
+    &\leq 2\sum_{k=1}^K 2^{9K/2 + 1}\Big(1 + \frac CK\Big)B^{1-k}V_k \\
+    &\leq (1+C)2^{9K/2 + 2}\sum B^{1-k}V_k
+    \lesssim 2^{9K/2}\sum B^{1-k}V_k
 \end{align*}
 Putting everything together, we have
 \begin{align*}
     &\E \|\alpha^< - \beta^<\|_1 \\
     &=\E \sup_{f : \|f\|_{\text{Lip}} \leq 1} \int_{\mathbb{R}}f(x)(\mu(dx) - \hat{\mu}(dx)) \\
-    &\lesssim \Big(\frac1K\sqrt{Bd+B^2Vd} + V2^{9K/2}B\Big) + (\max \|P^< - \hat{P}^<\|_1)(\Pr[\text{alg fails}]) \\
-    \intertext{Taking $K = c\ln n$ for sufficiently small $c$ and $B = O(\frac{\ln n}{n})$:}
-    &\lesssim \sqrt{\frac{d}{n\ln n}} + n^{\eps-1}V + 2\delta.
+    &\lesssim \Big(\frac1K\sqrt{Bd(1+V_1)} +  2^{9K/2}\sum B^{1-k}V_k\Big) + (\max \|P^< - \hat{P}^<\|_1)(\Pr[\text{alg fails}]) \\
+    &\lesssim \frac1K\sqrt{Bd(1+V_1)} +  2^{9K/2}\sum B^{1-k}V_k + \delta \\
+    \intertext{Taking $K = c\ln n$ for sufficiently small $c$, $B = O(\frac{\ln n}{n})$, and $V_k = VB^k$:}
+    &\lesssim \sqrt{\frac{d}{n\ln n}} + n^{\eps-1}\ln (n)V + \delta.
 \end{align*}
 (Assuming that $VB = O(1)$.)
 So, if we are in the same parameter setting as HJW, we'd want to take $V = d^{1-O(\eps)}$ (HJW gets $V = \sqrt{d}$).
 \end{proof}
+
+\section{Combining the two}
+For simplicity, we'll take the case in \cite{hjw18} where $B = O(\ln^2d/d)$.
+\begin{align*}
+    \E[\|\alpha^< - \hat{\alpha}^<\|_1] &\lesssim \frac1K\sqrt{Bd(1+V_1)} + \delta + 2^{9K/2}B\sum B^{-k}V_k \\
+    &\lesssim \frac1K\ln(d)\sqrt{1+V_1} + \delta + \frac{2^{9K/2}}{d}(\poly \log(d))\sum V_kd^k
+    \intertext{We'll do a very rough sanity check by judging $V_k$ to be like square root of variance and taking $C_k = 1$ (though this will make a difference in the log factors), making this}
+    &\lesssim \frac{\ln d}{K} + \delta + \frac{2^{9K/2}}{d}\poly\log d\sum d^k\sqrt{n^{-k} + n^{-1}d^{3-2k}}
+    \intertext{Now, we take $K = O(\ln d)$ for sufficiently small constant.}
+    &\lesssim 1 + \delta + d^{\eps-1}\poly\log d\sum d^k\sqrt{n^{-k} + n^{-1}d^{3-2k}} \\
+    &\lesssim 1 + \delta + d^{\eps-1}\sum d^k\sqrt{n^{-k} + n^{-1}d^{3-2k}}
+\end{align*}
+Where we bound $V_k^2$ as follows:
+\begin{align*}
+    n^{-k} + n^{-1}\int x^{2k-1}\mu(dx)
+    \leq n^{-k} + n^{-1}dB^{2k-2}
+    \lesssim n^{-k} + n^{-1}d^{3-2k}
+\end{align*}
+The final quantity should be $O(1)$ when we take $n = O(d^2/\poly\log(d))$, which is the desired dependence (presumably one can add dependence on $\eps$ later).
 
 \bibliographystyle{alpha}
 \bibliography{main.bib}
