@@ -61,18 +61,6 @@ Our goal will be to use weak Schur sampling to estimate
 (where bounds on error come from \cite{aisw19}).
 Subsequently, we use these estimates to perform the ``local moment matching'' of \cite{hjw18} to hopefully get a better sample complexity.
 
-\section{Quantum component}
-
-\begin{lemma}[{\cite[Lemma~9]{aisw19}}]
-    There is a constant $C_k$ depending only on $k$ such that
-    \begin{align}
-        \E[\frac{1}{n^{\underline{k}}}p_{(k)}^{\#}(\bm{\lambda})] &= \int x^k\mu(dx) \\
-        \Var[\frac{1}{n^{\underline{k}}}p_{(k)}^{\#}(\bm{\lambda})] &= C_k\Big(n^{-k} + n^{-1}\int x^{2k-1}\mu(dx)\Big)
-    \end{align}
-\end{lemma}
-
-Here, $p_{(k)}^\#(\bm{\lambda})$ is the estimator arising from what I think is the naive thing, which is writing the power sum (which they call $M_k(\alpha)$) in the Schur polynomial basis $\{s_\lambda(\alpha)\}$ and using the coefficients to renormalize the probabilities such that the estimator is unbiased. $n^{\underline{k}}$ is the falling power $(n)(n-1)\cdots(n-k+1)$.
-
 \section{Classical component}
 
 Trying to interpret the analysis in \cite{hjw18}.
@@ -88,6 +76,18 @@ Then we can find a $\hat{\alpha}$ such that
     \E[\|\alpha^< - \hat{\alpha}^<\|_1] \lesssim \frac1K\sqrt{Bd(1+V_1)} + \delta + 2^{9K/2}B\sum B^{-k}V_k
 \end{align*}
 \end{theorem}
+
+\cite{hjw18} takes $K = c_2 \ln (n)$, $B = c_1\ln(n)/n$, and $V_k = \sqrt{d\ln(n)}(\frac{c_3}{c_1}B)^k = \sqrt{d\ln(n)}(\frac{c_3\ln n}{n})^k$ ($c_3 > c_1$), achieving:
+\begin{align*}
+    &\E[\|\alpha^< - \hat{\alpha}^<\|_1] \\
+    &\lesssim \frac1K\sqrt{Bd(1+V_1)} + \delta + 2^{9K/2}B\sum B^{-k}V_k \\
+    &= \frac{1}{c_2\ln(n)}\sqrt{\frac{c_1\ln(n)d}{n}(1+\frac{\sqrt{d}\ln^{1.5}(n)c_3}{n})} + \delta + c_1n^{\frac{9}{2}c_2 - 1}\ln(n)\sum_{k=1}^{c_2\ln(n)} \sqrt{d\ln(n)}\Big(\frac{c_3}{c_1}\Big)^k \\
+    &\lesssim \sqrt{\frac{d}{n\ln(n)}(1+\frac{\sqrt{d}\ln^{1.5}(n)c_3}{n})} + \delta + n^{\frac{9}{2}c_2 - 1}\ln(n)\sqrt{d\ln(n)}n^{c_2\ln(c_3/c_1)} \\
+    &\lesssim \sqrt{\frac{d}{n\ln(n)}} + \delta + n^{c_4-1}\sqrt{d}
+\end{align*}
+Where we simply choose parameters to be sufficiently small, and $c_4$ can be as small as needed.
+Note that $V_k$ can be quite large: the bound of $\sqrt{d\ln(n)}\cdot (O(B))^k$ can be replaced by any $d^{1-\eps}(O(B))^k$ to get the $\frac{d}{\ln(d)}$ dependence we desire.
+(I think the whole argument still goes through even if variance is larger, in fact. It's not an artifact of having this $B$ assumption.)
 
 \begin{proof}
 Recall the derivation done in \cite{hjw18}: consider our given probability vector $\alpha = (\alpha_1,\ldots,\alpha_d)$, along with an estimate probability vector $\beta = (\beta_1,\ldots,\beta_d)$ that is formed by considering a measure $\nu$ and discretizing it as in \cite[Definition~8]{hjw18}.
@@ -155,12 +155,21 @@ Putting everything together, we have
     &=\E \sup_{f : \|f\|_{\text{Lip}} \leq 1} \int_{\mathbb{R}}f(x)(\mu(dx) - \hat{\mu}(dx)) \\
     &\lesssim \Big(\frac1K\sqrt{Bd(1+V_1)} +  2^{9K/2}\sum B^{1-k}V_k\Big) + (\max \|P^< - \hat{P}^<\|_1)(\Pr[\text{alg fails}]) \\
     &\lesssim \frac1K\sqrt{Bd(1+V_1)} +  2^{9K/2}\sum B^{1-k}V_k + \delta \\
-    \intertext{Taking $K = c\ln n$ for sufficiently small $c$, $B = O(\frac{\ln n}{n})$, and $V_k = VB^k$:}
-    &\lesssim \sqrt{\frac{d}{n\ln n}} + n^{\eps-1}\ln (n)V + \delta.
 \end{align*}
-(Assuming that $VB = O(1)$.)
-So, if we are in the same parameter setting as HJW, we'd want to take $V = d^{1-O(\eps)}$ (HJW gets $V = \sqrt{d}$).
 \end{proof}
+
+\section{Quantum component}
+
+\begin{lemma}[{\cite[Lemma~9]{aisw19}}]
+    There is a constant $C_k$ depending only on $k$ such that
+    \begin{align}
+        \E[\frac{1}{n^{\underline{k}}}p_{(k)}^{\#}(\bm{\lambda})] &= \int x^k\mu(dx) \\
+        \Var[\frac{1}{n^{\underline{k}}}p_{(k)}^{\#}(\bm{\lambda})] &= C_k\Big(n^{-k} + n^{-1}\int x^{2k-1}\mu(dx)\Big)
+    \end{align}
+\end{lemma}
+
+Here, $p_{(k)}^\#(\bm{\lambda})$ is the estimator arising from what I think is the naive thing, which is writing the power sum (which they call $M_k(\alpha)$) in the Schur polynomial basis $\{s_\lambda(\alpha)\}$ and using the coefficients to renormalize the probabilities such that the estimator is unbiased. $n^{\underline{k}}$ is the falling power $(n)(n-1)\cdots(n-k+1)$.
+
 
 \section{Combining the two}
 For simplicity, we'll take the case in \cite{hjw18} where $B = O(\ln^2d/d)$.
@@ -171,7 +180,7 @@ For simplicity, we'll take the case in \cite{hjw18} where $B = O(\ln^2d/d)$.
     &\lesssim \frac{\ln d}{K} + \delta + \frac{2^{9K/2}}{d}\poly\log d\sum d^k\sqrt{n^{-k} + n^{-1}d^{3-2k}}
     \intertext{Now, we take $K = O(\ln d)$ for sufficiently small constant.}
     &\lesssim 1 + \delta + d^{\eps-1}\poly\log d\sum d^k\sqrt{n^{-k} + n^{-1}d^{3-2k}} \\
-    &\lesssim 1 + \delta + d^{\eps-1}\sum d^k\sqrt{n^{-k} + n^{-1}d^{3-2k}}
+    &\lesssim 1 + \delta + d^{\hat{\eps}-1}\sum d^k\sqrt{n^{-k} + n^{-1}d^{3-2k}}
 \end{align*}
 Where we bound $V_k^2$ as follows:
 \begin{align*}
