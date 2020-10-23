@@ -66,12 +66,12 @@ Subsequently, we use these estimates to perform the ``local moment matching'' of
 Trying to interpret the analysis in \cite{hjw18}.
 
 \begin{theorem}
-Fix some $K \in \mathbb{N}$ \ewin{needs optimization, maybe?}.
+Fix some $K \in \mathbb{N}$.
 Suppose that, with probability $\geq 1-\delta$, we have an estimate $\hat{m}_k$ for all $k \in [K]$ such that
 \begin{align*}
     \abs[\Big]{\hat{m}_k - \int x^k \mu(dx)} < V_k.
 \end{align*}
-Then we can find a $\hat{\alpha}$ such that
+Then we can find an estimate $\hat{\alpha}$ such that
 \begin{align*}
     \E[\|\alpha^< - \hat{\alpha}^<\|_1] \lesssim \frac1K\sqrt{Bd(1+V_1)} + \delta + 2^{9K/2}B\sum B^{-k}V_k
 \end{align*}
