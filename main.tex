@@ -66,6 +66,7 @@ Subsequently, we use these estimates to perform the ``local moment matching'' of
 Trying to interpret the analysis in \cite{hjw18}.
 
 \begin{theorem}
+Let $\alpha_1, \dots, \alpha_d$ be a probability distribution and suppose $B \geq \alpha_i$ for all $i \in [d]$.
 Fix some $K \in \mathbb{N}$.
 Suppose that, with probability $\geq 1-\delta$, we have an estimate $\hat{m}_k$ for all $k \in [K]$ such that
 \begin{align*}
@@ -73,7 +74,7 @@ Suppose that, with probability $\geq 1-\delta$, we have an estimate $\hat{m}_k$ 
 \end{align*}
 Then we can find an estimate $\hat{\alpha}$ such that
 \begin{align*}
-    \E[\|\alpha^< - \hat{\alpha}^<\|_1] \lesssim \frac1K\sqrt{Bd(1+V_1)} + \delta + 2^{9K/2}B\sum B^{-k}V_k
+    \E[\|\alpha^< - \hat{\alpha}^<\|_1] \lesssim \frac1K\sqrt{Bd(1+V_1)} + 2^{9K/2}B\sum_{k=1}^K B^{-k}V_k + \delta.
 \end{align*}
 \end{theorem}
 
@@ -88,6 +89,25 @@ Then we can find an estimate $\hat{\alpha}$ such that
 Where we simply choose parameters to be sufficiently small, and $c_4$ can be as small as needed.
 Note that $V_k$ can be quite large: the bound of $\sqrt{d\ln(n)}\cdot (O(B))^k$ can be replaced by any $d^{1-\eps}(O(B))^k$ to get the $\frac{d}{\ln(d)}$ dependence we desire.
 (I think the whole argument still goes through even if variance is larger, in fact. It's not an artifact of having this $B$ assumption.)
+
+We use two pretty standard facts about polynomials:
+The first is Jackson's inequality, which gives an upper bound on the quality of approximation to a Lipschitz function:
+\begin{lemma}[{\cite[Lemma~22]{hjw18}}] \label{lem:jackson}
+    For $f: [a, b] \to \mathbb{R}$ a 1-Lipschitz function, the best polynomial approximation $P$ of degree $K$ satisfies
+    \begin{align*}
+        \abs{f(x) - P(x)} \leq \frac{C\sqrt{(b-a)(x-a)}}{K} \qquad \forall x \in [a,b].
+    \end{align*}
+    for a universal constant $C$.
+\end{lemma}
+The second is the bound on coefficients of a bounded polynomial.
+\begin{lemma}[{\cite[Lemma~27]{hjw18}}] \label{lem:coefs}
+    Let $p(x) = \sum_{\nu=1}^n a_\nu x^\nu$ be a polynomial of degree at most $n$ such that $\abs{p(x)} \leq A$ for $x \in [a,b]$.
+    Then if $a + b \neq 0$,
+    \begin{align*}
+        \abs{a_\nu} \leq 2^{7n/2}A\abs*{\frac{a+b}{2}}^{-\nu}\Big(\abs*{\frac{b+a}{b-a}}^n + 1\Big).
+    \end{align*}
+    If $a + b = 0$ then $\abs{a_\nu} \leq Ab^{-\nu}(\sqrt{2}+1)^n$. (Ewin: I don't think this case is relevant for us.)
+\end{lemma}
 
 \begin{proof}
 Recall the derivation done in \cite{hjw18}: consider our given probability vector $\alpha = (\alpha_1,\ldots,\alpha_d)$, along with an estimate probability vector $\beta = (\beta_1,\ldots,\beta_d)$ that is formed by considering a measure $\nu$ and discretizing it as in \cite[Definition~8]{hjw18}.
@@ -111,7 +131,7 @@ From the proof assumption, such a $\hat{\mu}$ exists with probability $\geq 1-\d
 This will be our proposed estimate measure.
 So, consider some $f: \mathbb{R} \to \mathbb{R}$ that is 1-Lipschitz satisfying $f(0) = 0$ (without loss of generality).
 We will take a polynomial approximation to $f$.
-Fix a polynomial $P(x) = \sum_{k=0}^K a_kx^k$.
+Consider a polynomial $P(x) = \sum_{k=0}^K a_kx^k$, which we take to be the polynomial minimizing pointwise deviation from $f(x)$, $P := \arg\min_Q \max_x |Q(x) - f(x)|$.
 Then
 \begin{align*}
     &\abs*{\int f(x)(\mu(dx) - \hat{\mu}(dx))} \\
@@ -119,13 +139,10 @@ Then
     & \leq \int \abs{f(x) - P(x)}(\mu(dx) + \hat{\mu}(dx)) + \sum_{k=1}^K \abs{a_k}\cdot 2 V_k \\
     & \leq \int \abs{f(x) - P(x)}(\mu(dx) + \hat{\mu}(dx)) + 2\sum_{k=1}^K \abs{a_k}V_k
 \end{align*}
-
-We take $P := \arg\min_Q \max_x |Q(x) - f(x)|$.
-Using Jackson's inequality \cite[Lemma~22]{hjw18}, for a constant C,
+By appying \cref{lem:jackson} with $[a, b] = [0, B]$, we can bound the first term.
 \begin{align*}
     &\int \abs{f(x) - P(x)}(\mu(dx) - \hat{\mu}(dx)) \\
-    &\leq \frac{C\sqrt{B}}{K}\int \sqrt{x}(\mu(dx) + \hat{\mu}(dx)).
-\intertext{Continuing with bounding the first term:}
+    &\leq \frac{C\sqrt{B}}{K}\int \sqrt{x}(\mu(dx) + \hat{\mu}(dx)) \\
     &\leq \frac{C\sqrt{B}}{K} \sqrt{\Big(\int \sqrt{x}^2 (\mu(dx) + \hat{\mu}(dx))\Big)\Big(\int 1^2 (\mu(dx) + \hat{\mu}(dx))\Big)} \tag*{by Cauchy-Schwarz} \\
     &= \frac{C\sqrt{2Bd}}{K} \sqrt{\int x (\mu(dx) + \hat{\mu}(dx))} \\
     &= \frac{C\sqrt{2Bd}}{K} \sqrt{\int x (2\mu(dx)) + \int x(\hat{\mu}(dx) - \mu(dx))} \\
@@ -137,7 +154,7 @@ To upper bound the second part, we need upper bounds on the coefficients.
     |P(x)| &\leq |P(x) - f(x)| + |f(x)|
     \leq \frac{CB}{K} + B
 \end{align*}
-so, using coefficient bounds \cite[Lemma~27]{hjw18}, for all $k \in [K]$
+so, using \cref{lem:coefs}, for all $k \in [K]$
 \begin{align*}
     |a_k| &\leq 2^{7K/2 + 1}B\Big(1 + \frac CK\Big)\Big(\frac{B}{2}\Big)^{-k} \\
     &\leq 2^{9K/2 + 1}\Big(1 + \frac CK\Big)B^{1-k}
@@ -154,7 +171,7 @@ Putting everything together, we have
     &\E \|\alpha^< - \beta^<\|_1 \\
     &=\E \sup_{f : \|f\|_{\text{Lip}} \leq 1} \int_{\mathbb{R}}f(x)(\mu(dx) - \hat{\mu}(dx)) \\
     &\lesssim \Big(\frac1K\sqrt{Bd(1+V_1)} +  2^{9K/2}\sum B^{1-k}V_k\Big) + (\max \|P^< - \hat{P}^<\|_1)(\Pr[\text{alg fails}]) \\
-    &\lesssim \frac1K\sqrt{Bd(1+V_1)} +  2^{9K/2}\sum B^{1-k}V_k + \delta \\
+    &\lesssim \frac1K\sqrt{Bd(1+V_1)} +  2^{9K/2}\sum B^{1-k}V_k + \delta
 \end{align*}
 \end{proof}
 
