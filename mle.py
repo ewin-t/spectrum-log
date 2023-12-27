@@ -1,20 +1,24 @@
 import numpy as np
 
-def vander(x):
-    # Outpute the Vandermonde matrix
-    n = len(x)
-    M = np.zeros((n, n))
-    for i in range(n):
-        for j in range(n):
-            M[i,j] = x[j] ** (n - 1 - i)
-    return M
+def vander(x, shift, same):
+    # Output the Vandermonde matrix
+    # M[i,j] = same[j]th derivative of (x[j] ** (shift[i] + n - 1 - i))
+    # except when same[i] != 0
+    d = len(x)
+    M = np.zeros((d, d))
+    for i in range(d):
+        for j in range(d):
+            power = shift[i] + d - 1 - i
+            M[i,j] = np.math.factorial(power)/np.math.factorial(power - same[j]) * (x[j] ** (power - same[j])) if power >= same[j] else 0
+    return M.T
 
+r'''
 def schur_unequal(l, x):
     # Computes the schur polynomial s_l(x)
     n = len(l)
     # n is the number of rows in lambda
     # d is the weight of lambda
-    Mvander = vander(x)
+    Mvander = vander(x, np.zeros(len(x)), np.zeros(len(x)))
     # The columns are of the form x_i^k through x_i^0
     Mnum = Mvander.copy()
     # Mnum[i, j] = x[j]^(l[i] + n - 1 - i)
@@ -35,13 +39,31 @@ def schur(l, x):
             val = x[i]
     # print(x)
     return schur_unequal(l, x)
+'''
+
+def schur(l, x):
+    d = len(x)
+    same = []
+    for i in range(d):
+        if(i > 0 and x[i] == x[i-1]):
+            same.append(same[-1] + 1)
+        else:
+            same.append(0)
+    Mvander = vander(x, np.zeros(d), same)
+    Mnum = vander(x, l, same)
+    return np.linalg.det(Mnum) / np.linalg.det(Mvander)
+        
 
 # Some tests
 # Schur polynomial (2, 1)
 # 1 1   1 2
 # 2     2
 #print(schur((2, 1), [2/3, 1/3]))
+#print(schur_new((2, 1), [2/3, 1/3]))
 #print(schur((5, 2, 1), [1, 1, 1]))
+#print(schur_new((5, 2, 1), [1, 1, 1]))
+#print(schur((5, 2, 1, 1), [1, 1, 0.5, 0.5]))
+#print(schur_new((5, 2, 1, 1), [1, 1, 0.5, 0.5]))
 
 # Copied from https://stackoverflow.com/questions/10035752/elegant-python-code-for-integer-partitioning
 def partitions(n, l, I=1):
@@ -127,12 +149,11 @@ def tvdist(alpha, beta):
     # computes the TV distance between alpha and beta
     return np.sum(np.abs(np.array(alpha) - np.array(beta))) / 2
 
-#print(optimize((10,1,1,1,1), 50))
-
+# print(optimize((100, 100, 1), 500))
 # d is the support size of the distribution
 d = 6
 # n is the number of samples
-n = 50
+n = 100
 # tol is the tolerance
 tol = n
 alpha = np.ones(d) / d
