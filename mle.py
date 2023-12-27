@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 
 def vander(x, shift, same):
     # Output the Vandermonde matrix
@@ -150,16 +151,38 @@ def tvdist(alpha, beta):
     return np.sum(np.abs(np.array(alpha) - np.array(beta))) / 2
 
 # print(optimize((100, 100, 1), 500))
-# d is the support size of the distribution
-d = 6
 # n is the number of samples
-n = 100
+n = 75
 # tol is the tolerance
 tol = n
-alpha = np.ones(d) / d
+# tries is the number of times it will average over
+tries = 10
 
-l = generate_tableau(alpha, n)
-est_eyd = eyd(l)
-est_mle = optimize(l, tol)[1]
-print("EYD:", est_eyd, "with an error of", np.round(tvdist(alpha, est_eyd), decimals=4))
-print("MLE:", est_mle, "with an error of", np.round(tvdist(alpha, est_mle), decimals=4))
+# d is the support size of the distribution
+ds = range(2, 7)
+# this will store the error of each estimator as a function of d
+eyds = []
+mles = []
+for d in ds:
+    alpha = np.ones(d) / d
+    eyd_err = 0
+    mle_err = 0
+    for tmp in range(tries):
+        l = generate_tableau(alpha, n)
+        est_eyd = eyd(l)
+        eyd_err += tvdist(alpha, est_eyd)
+        est_mle = optimize(l, tol)[1]
+        mle_err += tvdist(alpha, est_mle)
+        #print("EYD:", est_eyd, "with an error of", np.round(est_eyd_error, decimals=4))
+        #print("MLE:", est_mle, "with an error of", np.round(est_mle_error, decimals=4))
+    eyd_err /= tries
+    mle_err /= tries
+    eyds.append(eyd_err)
+    mles.append(mle_err)
+
+plt.plot(ds, eyds, label="EYD")
+plt.plot(ds, mles, label="MLE")
+plt.legend()
+plt.ylabel('TV error')
+#plt.axis((0, 6, 0, 20))
+plt.show()
