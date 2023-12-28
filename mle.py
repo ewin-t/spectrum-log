@@ -1,4 +1,5 @@
 import numpy as np
+import scipy.optimize as sopt
 import matplotlib.pyplot as plt
 
 def vander(x, shift, same):
@@ -13,40 +14,11 @@ def vander(x, shift, same):
             M[i,j] = np.math.factorial(power)/np.math.factorial(power - same[j]) * (x[j] ** (power - same[j])) if power >= same[j] else 0
     return M.T
 
-r'''
-def schur_unequal(l, x):
-    # Computes the schur polynomial s_l(x)
-    n = len(l)
-    # n is the number of rows in lambda
-    # d is the weight of lambda
-    Mvander = vander(x, np.zeros(len(x)), np.zeros(len(x)))
-    # The columns are of the form x_i^k through x_i^0
-    Mnum = Mvander.copy()
-    # Mnum[i, j] = x[j]^(l[i] + n - 1 - i)
-    for i in range(n):
-        for j in range(n):
-            Mnum[i,j] *= x[j] ** l[i]
-    return np.linalg.det(Mnum) / np.linalg.det(Mvander)
-
-def schur(l, x):
-    # schur_unequal fails when the vandermonde determinant is zero.
-    # perturb so that this is not the case
-    tol = 0.000001
-    val = x[0] + 1
-    for i in range(len(x)):
-        if(x[i] == val):
-            x[i] = x[i-1] + tol
-        else:
-            val = x[i]
-    # print(x)
-    return schur_unequal(l, x)
-'''
-
 def schur(l, x):
     d = len(x)
     same = []
     for i in range(d):
-        if(i > 0 and x[i] == x[i-1]):
+        if(i > 0 and np.abs(x[i] - x[i-1]) < 1e-5):
             same.append(same[-1] + 1)
         else:
             same.append(0)
@@ -74,11 +46,11 @@ def partitions(n, l, I=1):
             for p in partitions(n-i, l-1, i):
                 yield p + (i,)
 
-def optimize(l, tol):
+def optimize_brute(l, tol):
     # try all s_l(x) for x which sums to 1,
     # up to a certain tolerance tol and then output the largest one.
     d = len(l)
-    val = 0
+    val = -np.inf
     for y in partitions(tol, d):
         x = np.zeros(d)
         for i in range(len(y)):
@@ -89,6 +61,26 @@ def optimize(l, tol):
             val = newval
             best = x.copy()
     return val, best
+
+def schur_opt(l):
+    def opt_function(x):
+        return -schur(l, x)
+    return opt_function
+
+def optimize(l, alpha):
+    # arg max_x s_l(x),
+    # subject to x >= 0 and \sum x = 1.
+    # alpha works as the start point
+    d = len(l)
+    bounds = d * [(0, 1.0),]
+    cons = sopt.LinearConstraint(d * [1], [1], [1])
+    soln = sopt.minimize(schur_opt(l),
+                         alpha,
+                         method='trust-constr',
+                         bounds=bounds,
+                         constraints=cons,
+                         options={'disp': True})#, 'initial_tr_radius': 0.5})
+    return soln.fun, sorted(soln.x, reverse=True)
 
 r'''
 The stuff below is helper stuff for computing the EYD estimator
@@ -151,7 +143,8 @@ def tvdist(alpha, beta):
     # alpha and beta should be sorted when 
     return np.sum(np.abs(np.array(sorted(alpha)) - np.array(sorted(beta)))) / 2
 
-# print(optimize((100, 100, 1), 500))
+print(optimize_brute((5, 5, 1), 100))
+print(optimize((5, 5, 1), (0.5, 0.5, 0)))
 
 r'''
 # Below is the check to make sure things are working
@@ -189,11 +182,10 @@ plt.show()
 '''
 
 # n is the number of samples
-n = 40
-# tol is the tolerance
-tol = n
+n = 50
+#tol = 40
 # tries is the number of times it will average over
-tries = 200
+tries = 100
 
 # d is the support size of the distribution
 ds = [3, 6]
@@ -201,15 +193,22 @@ ds = [3, 6]
 eyds = []
 mles = []
 for d in ds:
-    alpha = np.ones(d) / d
+    #alpha = np.ones(d) / d
+    alpha = np.array(sorted(range(1, d+1), reverse=True))
+    alpha = alpha / np.sum(alpha)
     eyd_err = 0
     mle_err = 0
     for tmp in range(tries):
+        #alpha = np.random.random(d)
+        #alpha /= np.sum(alpha)
         l = generate_tableau(alpha, n)
         est_eyd_try = eyd(l)
         eyd_err_try = tvdist(alpha, est_eyd_try)
         eyd_err += eyd_err_try
-        est_mle_try = optimize(l, tol)[1]
+        #brute_fun, est_mle_brute_try = optimize_brute(l, tol)
+        smart_fun, est_mle_try = optimize(l, alpha)
+        print(smart_fun)
+        #print(brute_fun, "vs", -smart_fun)
         mle_err_try = tvdist(alpha, est_mle_try)
         mle_err += mle_err_try
         print("EYD:", est_eyd_try, "with an error of", np.round(eyd_err_try, decimals=4))
@@ -219,10 +218,9 @@ for d in ds:
     eyds.append(eyd_err)
     mles.append(mle_err)
 
-print("EYDs", eyds, eyds[1]/eyds[0])
-print("MLEs", mles, mles[1]/mles[0])
+print("EYDs", eyds)#, eyds[1]/eyds[0])
+print("MLEs", mles)#, mles[1]/mles[0])
 
-'''
 plt.plot(ds, eyds, label="EYD")
 plt.plot(ds, mles, label="MLE")
 plt.legend()
@@ -230,4 +228,3 @@ plt.ylabel('TV error')
 plt.xlabel('d')
 #plt.axis((0, 6, 0, 20))
 plt.show()
-'''
