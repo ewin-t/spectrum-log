@@ -148,18 +148,55 @@ def generate_tableau(alpha, n):
 
 def tvdist(alpha, beta):
     # computes the TV distance between alpha and beta
-    return np.sum(np.abs(np.array(alpha) - np.array(beta))) / 2
+    # alpha and beta should be sorted when 
+    return np.sum(np.abs(np.array(sorted(alpha)) - np.array(sorted(beta)))) / 2
 
 # print(optimize((100, 100, 1), 500))
+
+r'''
+# Below is the check to make sure things are working
+# We see a linear relationship between TV error and d, which is what we want
+# Since we expect err ~ d/sqrt(n).
+
 # n is the number of samples
-n = 75
+n = 1000
+# tries is the number of times it will average over
+tries = 5
+
+# d is the support size of the distribution
+ds = range(2, 10)
+# this will store the error of each estimator as a function of d
+eyds = []
+for d in ds:
+    alpha = np.ones(d) / d
+    eyd_err = 0
+    for tmp in range(tries):
+        l = generate_tableau(alpha, n)
+        est_eyd_try = eyd(l)
+        eyd_err_try = tvdist(alpha, est_eyd_try)
+        eyd_err += eyd_err_try
+        print("EYD:", est_eyd_try, "with an error of", np.round(eyd_err_try, decimals=4))
+    eyd_err /= tries
+    eyds.append(eyd_err ** 2)
+
+plt.plot(ds, eyds, label="EYD")
+plt.legend()
+plt.ylabel('TV error')
+plt.xlabel('d')
+plt.title('n = 500, avgd over 5 tries')
+#plt.axis((0, 6, 0, 20))
+plt.show()
+'''
+
+# n is the number of samples
+n = 40
 # tol is the tolerance
 tol = n
 # tries is the number of times it will average over
-tries = 10
+tries = 200
 
 # d is the support size of the distribution
-ds = range(2, 7)
+ds = [3, 6]
 # this will store the error of each estimator as a function of d
 eyds = []
 mles = []
@@ -169,20 +206,28 @@ for d in ds:
     mle_err = 0
     for tmp in range(tries):
         l = generate_tableau(alpha, n)
-        est_eyd = eyd(l)
-        eyd_err += tvdist(alpha, est_eyd)
-        est_mle = optimize(l, tol)[1]
-        mle_err += tvdist(alpha, est_mle)
-        #print("EYD:", est_eyd, "with an error of", np.round(est_eyd_error, decimals=4))
-        #print("MLE:", est_mle, "with an error of", np.round(est_mle_error, decimals=4))
+        est_eyd_try = eyd(l)
+        eyd_err_try = tvdist(alpha, est_eyd_try)
+        eyd_err += eyd_err_try
+        est_mle_try = optimize(l, tol)[1]
+        mle_err_try = tvdist(alpha, est_mle_try)
+        mle_err += mle_err_try
+        print("EYD:", est_eyd_try, "with an error of", np.round(eyd_err_try, decimals=4))
+        print("MLE:", est_mle_try, "with an error of", np.round(mle_err_try, decimals=4))
     eyd_err /= tries
     mle_err /= tries
     eyds.append(eyd_err)
     mles.append(mle_err)
 
+print("EYDs", eyds, eyds[1]/eyds[0])
+print("MLEs", mles, mles[1]/mles[0])
+
+'''
 plt.plot(ds, eyds, label="EYD")
 plt.plot(ds, mles, label="MLE")
 plt.legend()
 plt.ylabel('TV error')
+plt.xlabel('d')
 #plt.axis((0, 6, 0, 20))
 plt.show()
+'''
