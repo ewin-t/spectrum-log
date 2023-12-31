@@ -1,11 +1,14 @@
 import numpy as np
+import tnn
 import scipy.optimize as sopt
 import matplotlib.pyplot as plt
 
 def vander(x, shift, same):
-    # Output the Vandermonde matrix
-    # M[i,j] = same[j]th derivative of (x[j] ** (shift[i] + n - 1 - i))
-    # except when same[i] != 0
+    '''
+    Output the Vandermonde matrix
+    M[i,j] = same[j]th derivative of (x[j] ** (shift[i] + n - 1 - i))
+    except when same[i] != 0
+    '''
     d = len(x)
     M = np.zeros((d, d))
     for i in range(d):
@@ -14,7 +17,7 @@ def vander(x, shift, same):
             M[i,j] = np.math.factorial(power)/np.math.factorial(power - same[j]) * (x[j] ** (power - same[j])) if power >= same[j] else 0
     return M.T
 
-def schur(l, x):
+def schur_det(l, x):
     d = len(x)
     same = []
     for i in range(d):
@@ -25,6 +28,47 @@ def schur(l, x):
     Mvander = vander(x, np.zeros(d), same)
     Mnum = vander(x, l, same)
     return np.linalg.det(Mnum) / np.linalg.det(Mvander)
+        
+def schur_tnn(l, x):
+    '''
+    We rely on the observation of [CDEKK18], which states that
+        s_lambda(x) = det(V),
+    where V denotes the submatrix of the (upper triangular) matrix
+        U_{i,j} = h_{i-j}(x),
+    where h_i(x) is the complete symmetrix polynomial, indexed by columns
+        n+lambda_1, n-1+lambda_2, ...
+
+    Since U is totally non-negative, V is as well. Since U is TNN, it can be decomposed in a really nice way that allows for efficient computation. In particular, we maintain the bi-diagonal decomposition of U, which is essentially compactifying a product of matrices
+        D * upper(x1, x2, ..., xn) * upper(x1, ..., x n-1, 0) * ...
+    into the matrix form described in (Eq. (14) of [CDEKK18]).
+    '''
+    d = len(l)
+    # Construct the initial decomposition of U
+    bdecomp = np.zeros((d, d+l[0]))
+    for i in range(d):
+        for j in range(d+l[0]):
+            if(i == j):
+                bdecomp[i,j] = 1
+            if(i < j):
+                bdecomp[i,j] = x[i]
+    # Construct the list of columns that need to be removed from U
+    to_remove = list(range(0, d+l[0]))
+    for i in range(d):
+        to_remove.remove(d - i - 1 + l[i]) # the indexing starts at zero
+    for i in to_remove:
+        print("running remove_row on", bdecomp, "for", i)
+        bdecomp = tnn.remove_row(bdecomp.T, i).T
+    # The determinant is the product of the diagonal entries in the BD matrix
+    output = 1
+    for i in range(d):
+        output *= bdecomp[i][i]
+    return output
+
+def schur(l, x, method='det'):
+    if method == 'det':
+        return schur_det(l, x)
+    elif method == 'tnn':
+        return schur_tnn(l, x)
         
 
 # Some tests
@@ -172,7 +216,7 @@ def tvdist(alpha, beta):
     # alpha and beta should be sorted when 
     return np.sum(np.abs(np.array(sorted(alpha)) - np.array(sorted(beta)))) / 2
 
-print(optimize_brute((10, 10, 1), 50))
+#print(optimize_brute((10, 10, 1), 50))
 #print(optimize((5, 5, 1), (0.5, 0.5, 0)))
 
 r'''
