@@ -92,26 +92,29 @@ end
 def bd_multiply(bd, x, i):
     '''
     Find the BD decomposition for A * e_i(x), where bd is the decomposition for A.
+    Changes to account for 0-indexing
+    Assumes that i is 1-indexed
     '''
     m, n = bd.shape
-    z = -1
-    while((z < min(i-1, n)) and (z == -1 or bd[i-1, z] == 0)):
+    z = 0
+    #print(bd, x, i)
+    while((z < min(i-1, n)) and (z == 0 or bd[i-1-1, z-1] == 0)):
         b = np.zeros(m-i+1)
         c = np.zeros(m-i+1)
-        for j in range(-1, m-i):
-            if(z + j > -1):
-                if(z + j < n):
-                    b[j+1] = bd[j+i, z+j]
+        for j in range(m-i+1):
+            if(z+j > 0):
+                if(z+j <= n):
+                    b[j+1-1] = bd[j+i-1, z+j-1]
             else:
-                b[j+1] = x
-            if(z + j + 1 < n):
-                c[j+1] = bd[j+i, z+j+1]
+                b[j+1-1] = x
+            if(z+j+1 <= n):
+                c[j+1-1] = bd[j+i-1, z+j+1-1]
         q = dqd2(b, c)
-        for j in range(-1, m-i):
-            if (z+j > -1) and (z+j < n):
-                bd[j+i, z+j] = b[j+1]
-            if (z+j+1 < n):
-                bd[j+i, z+j+1] = c[j+1]
+        for j in range(m-i+1):
+            if (z+j > 0) and (z+j <= n):
+                bd[j+i-1, z+j-1] = b[j+1-1]
+            if (z+j+1 <= n):
+                bd[j+i-1, z+j+1-1] = c[j+1-1]
         i += q-1
         z += q
 
@@ -147,15 +150,16 @@ B=B([1:i-1,i+1:m],:);
 
 def remove_row(bd, ind):
     m, n = bd.shape
-    if(ind < m-1):
-        for j in range(0, min(ind, n)):
-            bd_multiply(bd[j+1:, j+1:], bd[ind+1,j], ind-j+1)
-            bd[ind+1, j] *= bd[ind, j]
-        for j in range(min(n,m)+(m>n) - 1, ind, -1):
-            bd[j, j-1] *= bd[j-1, j-1]
-            if(j < n):
-                bd[j, j] /= bd[j, j-1]
-        for j in range(ind+1, n):
-            bd_multiply(bd[ind+1:,ind:].T, bd[ind, j], j-ind+1)
-    return np.delete(bd, ind, 0)
+    ind += 1 # 1-indexing
+    if(ind < m):
+        for j in range(1, min(ind-1, n)+1):
+            bd_multiply(bd[j+1-1:, j+1-1:], bd[ind+1-1,j-1], ind-j+1)
+            bd[ind+1-1, j-1] *= bd[ind-1, j-1]
+        for j in range(min(n,m)+(m>n), ind, -1):
+            bd[j-1, j-1-1] *= bd[j-1-1, j-1-1]
+            if(j <= n):
+                bd[j-1, j-1] /= bd[j-1, j-1-1]
+        for j in range(ind+1, n+1):
+            bd_multiply(bd[ind+1-1:,ind-1:].T, bd[ind-1, j-1], j-ind+1)
+    return np.delete(bd, ind-1, 0)
 

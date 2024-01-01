@@ -52,19 +52,21 @@ def schur_tnn(l, x):
             if(i < j):
                 bdecomp[i,j] = x[i]
     # Construct the list of columns that need to be removed from U
-    to_remove = list(range(0, d+l[0]))
+    to_remove = list(range(0, d+l[0]))[::-1]
     for i in range(d):
         to_remove.remove(d - i - 1 + l[i]) # the indexing starts at zero
+    print(bdecomp)
     for i in to_remove:
-        print("running remove_row on", bdecomp, "for", i)
+        print("removing row", i)
         bdecomp = tnn.remove_row(bdecomp.T, i).T
+        print(bdecomp)
     # The determinant is the product of the diagonal entries in the BD matrix
     output = 1
     for i in range(d):
         output *= bdecomp[i][i]
     return output
 
-def schur(l, x, method='det'):
+def schur(l, x, method='tnn'):
     if method == 'det':
         return schur_det(l, x)
     elif method == 'tnn':
