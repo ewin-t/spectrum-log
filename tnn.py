@@ -26,19 +26,28 @@ end
 '''
 
 def dqd2(b, c):
+    flag = False
     # Subroutine for 4.1
+    if(b[0] == 0):
+        return 0
     t = c[0]
     c[0] = b[0] + c[0]
     d = b[0]
     b[0] = 0
     i = 0
-    while((i < len(b) - 1) and (b[i+1] > 0)):
+    while((i < len(b) - 1) and (b[i+1] != 0)):
+        if(c[i] == 0):
+            flag = True
         e = b[i+1]/c[i]
         d = e * d
         b[i+1] = e * t
         t = c[i+1]
         c[i+1] = c[i+1] + d
         i += 1
+    if(flag):
+        print(b)
+        print(c)
+        exit()
     return i
 
 r'''

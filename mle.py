@@ -55,11 +55,11 @@ def schur_tnn(l, x):
     to_remove = list(range(0, d+l[0]))[::-1]
     for i in range(d):
         to_remove.remove(d - i - 1 + l[i]) # the indexing starts at zero
-    print(bdecomp)
+    #print(bdecomp)
     for i in to_remove:
-        print("removing row", i)
+        #print("removing row", i)
         bdecomp = tnn.remove_row(bdecomp.T, i).T
-        print(bdecomp)
+        #print(bdecomp)
     # The determinant is the product of the diagonal entries in the BD matrix
     output = 1
     for i in range(d):
@@ -116,7 +116,6 @@ def partitions_ball(x0, dist, l1, I=0):
                            and (val <= l1/l),
                         range(0, l1+1))
         for i in bounds_itr:
-            print(x0[:-1], dist - np.abs(i - x0[-1]), l1 - i, i)
             for p in partitions_ball(x0[:-1], dist - np.abs(i - x0[-1]), l1 - i, I=i):
                 yield p + (i,)
 
@@ -130,7 +129,6 @@ def optimize_brute(l, tol, smart=False, alpha=False, dist=0):
         x = np.zeros(d)
         for i in range(len(y)):
             x[i] = y[i] / tol
-        print(x)
         newval = schur(l, x)
         if(newval > val):
             val = newval
@@ -186,8 +184,8 @@ def rsk(x, d):
     for row in ssyt:
         lamb.append(len(row))
     lamb += (d - len(lamb)) * [0]
-    print("The output of the RSK algorithm is", ssyt)
-    print("This corresponds to a tableau of", lamb)
+    #print("The output of the RSK algorithm is", ssyt)
+    print("The tableau is", lamb)
     return lamb
 
 # Test from OW survey: should output [4,4,3,3,2],[3,3,1],[2],[1]
@@ -210,7 +208,6 @@ Now the helper functions for comparing the two.
 def generate_tableau(alpha, n):
     d = len(alpha)
     sample = np.random.choice(range(1,d+1), n, p=alpha)
-    print("The random sample according to", alpha, "is", sample)
     return rsk(sample, d)
 
 def tvdist(alpha, beta):
@@ -256,15 +253,14 @@ plt.title('n = 500, avgd over 5 tries')
 plt.show()
 '''
 
-'''
 # n is the number of samples
-n = 50
-#tol = 40
+n = 200
+tol = 40
 # tries is the number of times it will average over
-tries = 100
+tries = 200
 
 # d is the support size of the distribution
-ds = [3, 6]
+ds = range(4, 9)
 # this will store the error of each estimator as a function of d
 eyds = []
 mles = []
@@ -281,10 +277,7 @@ for d in ds:
         est_eyd_try = eyd(l)
         eyd_err_try = tvdist(alpha, est_eyd_try)
         eyd_err += eyd_err_try
-        #brute_fun, est_mle_brute_try = optimize_brute(l, tol)
-        smart_fun, est_mle_try = optimize_brute(l, alpha)
-        print(smart_fun)
-        #print(brute_fun, "vs", -smart_fun)
+        brute_fun, est_mle_try = optimize_brute(l, tol, smart=True, alpha=alpha, dist=0.3 - (d-4) * 0.025)
         mle_err_try = tvdist(alpha, est_mle_try)
         mle_err += mle_err_try
         print("EYD:", est_eyd_try, "with an error of", np.round(eyd_err_try, decimals=4))
@@ -304,4 +297,3 @@ plt.ylabel('TV error')
 plt.xlabel('d')
 #plt.axis((0, 6, 0, 20))
 plt.show()
-'''
