@@ -254,13 +254,13 @@ plt.show()
 '''
 
 # n is the number of samples
-n = 200
-tol = 40
+n = 100
+tol = 150
 # tries is the number of times it will average over
-tries = 200
+tries = 10
 
 # d is the support size of the distribution
-ds = range(4, 9)
+ds = [5,10]
 # this will store the error of each estimator as a function of d
 eyds = []
 mles = []
@@ -277,7 +277,7 @@ for d in ds:
         est_eyd_try = eyd(l)
         eyd_err_try = tvdist(alpha, est_eyd_try)
         eyd_err += eyd_err_try
-        brute_fun, est_mle_try = optimize_brute(l, tol, smart=True, alpha=alpha, dist=0.3 - (d-4) * 0.025)
+        brute_fun, est_mle_try = optimize_brute(l, tol, smart=True, alpha=alpha, dist=0.05)
         mle_err_try = tvdist(alpha, est_mle_try)
         mle_err += mle_err_try
         print("EYD:", est_eyd_try, "with an error of", np.round(eyd_err_try, decimals=4))
