@@ -258,9 +258,11 @@ n = 100
 tol = 150
 # tries is the number of times it will average over
 tries = 10
+# dist_try denotes the ball in which optimize checks. i.e. MLE will only be correct if the arg max s_lambda(x) is within dist_try of alpha.
+dist_try = 0.05
 
 # d is the support size of the distribution
-ds = [5,10]
+ds = [5, 10]
 # this will store the error of each estimator as a function of d
 eyds = []
 mles = []
@@ -277,7 +279,7 @@ for d in ds:
         est_eyd_try = eyd(l)
         eyd_err_try = tvdist(alpha, est_eyd_try)
         eyd_err += eyd_err_try
-        brute_fun, est_mle_try = optimize_brute(l, tol, smart=True, alpha=alpha, dist=0.05)
+        brute_fun, est_mle_try = optimize_brute(l, tol, smart=True, alpha=alpha, dist=dist_try)
         mle_err_try = tvdist(alpha, est_mle_try)
         mle_err += mle_err_try
         print("EYD:", est_eyd_try, "with an error of", np.round(eyd_err_try, decimals=4))
