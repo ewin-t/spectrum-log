@@ -216,25 +216,28 @@ def tvdist(alpha, beta):
     return np.sum(np.abs(np.array(sorted(alpha)) - np.array(sorted(beta)))) / 2
 
 def concavity_test(l):
-    # test if s_l is convex in a silly way.
+    # test if s_l is concave in a silly way.
+    # s_l is not concave (try (1,1,1))
     d = len(l)
     for t in range(1000):
         x = np.random.random(d)
-        y = np.random.random(d)
-        x.sort(reverse=True)
-        y.sort(reverse=True)
+        x.sort()
+        x = x[::-1]
         x /= x.sum()
+        y = np.random.random(d)
+        y.sort()
         y /= y.sum()
+        y = y[::-1]
         z = (x + y) / 2
         sx = schur(l, x)
         sy = schur(l, y)
         sz = schur(l, z)
         if(sx + sy > 2 * sz):
-            print(t, x, y)
+            print(t, x, y, sx, sy, sz)
             return False
     return True
     
-#concavity_test((3, 2, 1))
+#concavity_test((1,1, 1))
 
 #print(optimize_brute((10, 10, 1), 50))
 #print(optimize((5, 5, 1), (0.5, 0.5, 0)))
