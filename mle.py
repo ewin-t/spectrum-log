@@ -215,6 +215,27 @@ def tvdist(alpha, beta):
     # alpha and beta should be sorted when 
     return np.sum(np.abs(np.array(sorted(alpha)) - np.array(sorted(beta)))) / 2
 
+def concavity_test(l):
+    # test if s_l is convex in a silly way.
+    d = len(l)
+    for t in range(1000):
+        x = np.random.random(d)
+        y = np.random.random(d)
+        x.sort(reverse=True)
+        y.sort(reverse=True)
+        x /= x.sum()
+        y /= y.sum()
+        z = (x + y) / 2
+        sx = schur(l, x)
+        sy = schur(l, y)
+        sz = schur(l, z)
+        if(sx + sy > 2 * sz):
+            print(t, x, y)
+            return False
+    return True
+    
+#concavity_test((3, 2, 1))
+
 #print(optimize_brute((10, 10, 1), 50))
 #print(optimize((5, 5, 1), (0.5, 0.5, 0)))
 
@@ -253,6 +274,7 @@ plt.title('n = 500, avgd over 5 tries')
 plt.show()
 '''
 
+'''
 # n is the number of samples
 n = 100
 tol = 150
@@ -299,3 +321,4 @@ plt.ylabel('TV error')
 plt.xlabel('d')
 #plt.axis((0, 6, 0, 20))
 plt.show()
+'''
