@@ -1,7 +1,7 @@
 import numpy as np
 import tnn
 import scipy.optimize as sopt
-import matplotlib.pyplot as plt
+
 
 def vander(x, shift, same):
     '''
@@ -16,6 +16,7 @@ def vander(x, shift, same):
             power = shift[i] + d - 1 - i
             M[i,j] = np.math.factorial(power)/np.math.factorial(power - same[j]) * (x[j] ** (power - same[j])) if power >= same[j] else 0
     return M.T
+
 
 def schur_det(l, x):
     d = len(x)
@@ -96,6 +97,7 @@ def partitions(n, l, I=1):
             for p in partitions(n-i, l-1, i):
                 yield p + (i,)
 
+
 def partitions_ball(x0, dist, l1, I=0):
     '''
     Gives a list of integer x (sorted) such that ||x||_1 = l1
@@ -118,6 +120,7 @@ def partitions_ball(x0, dist, l1, I=0):
         for i in bounds_itr:
             for p in partitions_ball(x0[:-1], dist - np.abs(i - x0[-1]), l1 - i, I=i):
                 yield p + (i,)
+
 
 def optimize_brute(l, tol, smart=False, alpha=False, dist=0):
     # try all s_l(x) for x which sums to 1,
@@ -155,65 +158,13 @@ def optimize(l, alpha):
                          options={'disp': True})#, 'initial_tr_radius': 0.5})
     return soln.fun, sorted(soln.x, reverse=True)
 
-r'''
-The stuff below is helper stuff for computing the EYD estimator
-'''
 
-def rsk_insert(val, ssyt, row=0):
-    # row is the current row being inserted
-    isSmaller = list(map(lambda x: x < val, ssyt[row]))
-    if(True in isSmaller):
-        insertIndex = isSmaller.index(True)
-        newval = ssyt[row][insertIndex]
-        ssyt[row][insertIndex] = val
-        if(len(ssyt) == row+1):
-            ssyt.append([newval])
-        else:
-            rsk_insert(newval, ssyt, row+1)
-    else:
-        ssyt[row].append(val)
-
-def rsk(x, d):
-    # RSK correspondence
-    # x is a list of elements in [1, d]; outputs l padded with zeroes
-    ssyt = [[]]
-    for val in x:
-        rsk_insert(val, ssyt)
-        # print(ssyt)
-    lamb = []
-    for row in ssyt:
-        lamb.append(len(row))
-    lamb += (d - len(lamb)) * [0]
-    #print("The output of the RSK algorithm is", ssyt)
-    print("The tableau is", lamb)
-    return lamb
-
-# Test from OW survey: should output [4,4,3,3,2],[3,3,1],[2],[1]
-# a = [1,3,3,2,1,3,4,4,3,2]
-# rsk(a)
-
-def eyd(l):
-    # The "empirical young diagram" estimator
-    # Given a tableau l with |l| = n, output l/n.
-    d = len(l)
-    estimate = np.zeros(d)
-    for i in range(len(l)):
-        estimate[i] = l[i]
-    return estimate / np.sum(estimate)
 
 r'''
 Now the helper functions for comparing the two.
 '''
 
-def generate_tableau(alpha, n):
-    d = len(alpha)
-    sample = np.random.choice(range(1,d+1), n, p=alpha)
-    return rsk(sample, d)
 
-def tvdist(alpha, beta):
-    # computes the TV distance between alpha and beta
-    # alpha and beta should be sorted when 
-    return np.sum(np.abs(np.array(sorted(alpha)) - np.array(sorted(beta)))) / 2
 
 def concavity_test(l):
     # test if s_l is concave in a silly way.
@@ -242,86 +193,3 @@ def concavity_test(l):
 #print(optimize_brute((10, 10, 1), 50))
 #print(optimize((5, 5, 1), (0.5, 0.5, 0)))
 
-r'''
-# Below is the check to make sure things are working
-# We see a linear relationship between TV error and d, which is what we want
-# Since we expect err ~ d/sqrt(n).
-
-# n is the number of samples
-n = 1000
-# tries is the number of times it will average over
-tries = 5
-
-# d is the support size of the distribution
-ds = range(2, 10)
-# this will store the error of each estimator as a function of d
-eyds = []
-for d in ds:
-    alpha = np.ones(d) / d
-    eyd_err = 0
-    for tmp in range(tries):
-        l = generate_tableau(alpha, n)
-        est_eyd_try = eyd(l)
-        eyd_err_try = tvdist(alpha, est_eyd_try)
-        eyd_err += eyd_err_try
-        print("EYD:", est_eyd_try, "with an error of", np.round(eyd_err_try, decimals=4))
-    eyd_err /= tries
-    eyds.append(eyd_err ** 2)
-
-plt.plot(ds, eyds, label="EYD")
-plt.legend()
-plt.ylabel('TV error')
-plt.xlabel('d')
-plt.title('n = 500, avgd over 5 tries')
-#plt.axis((0, 6, 0, 20))
-plt.show()
-'''
-
-'''
-# n is the number of samples
-n = 100
-tol = 150
-# tries is the number of times it will average over
-tries = 10
-# dist_try denotes the ball in which optimize checks. i.e. MLE will only be correct if the arg max s_lambda(x) is within dist_try of alpha.
-dist_try = 0.05
-
-# d is the support size of the distribution
-ds = [5, 10]
-# this will store the error of each estimator as a function of d
-eyds = []
-mles = []
-for d in ds:
-    #alpha = np.ones(d) / d
-    alpha = np.array(sorted(range(1, d+1), reverse=True))
-    alpha = alpha / np.sum(alpha)
-    eyd_err = 0
-    mle_err = 0
-    for tmp in range(tries):
-        #alpha = np.random.random(d)
-        #alpha /= np.sum(alpha)
-        l = generate_tableau(alpha, n)
-        est_eyd_try = eyd(l)
-        eyd_err_try = tvdist(alpha, est_eyd_try)
-        eyd_err += eyd_err_try
-        brute_fun, est_mle_try = optimize_brute(l, tol, smart=True, alpha=alpha, dist=dist_try)
-        mle_err_try = tvdist(alpha, est_mle_try)
-        mle_err += mle_err_try
-        print("EYD:", est_eyd_try, "with an error of", np.round(eyd_err_try, decimals=4))
-        print("MLE:", est_mle_try, "with an error of", np.round(mle_err_try, decimals=4))
-    eyd_err /= tries
-    mle_err /= tries
-    eyds.append(eyd_err)
-    mles.append(mle_err)
-
-print("EYDs", eyds)#, eyds[1]/eyds[0])
-print("MLEs", mles)#, mles[1]/mles[0])
-
-plt.plot(ds, eyds, label="EYD")
-plt.plot(ds, mles, label="MLE")
-plt.legend()
-plt.ylabel('TV error')
-plt.xlabel('d')
-#plt.axis((0, 6, 0, 20))
-plt.show()
-'''
