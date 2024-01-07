@@ -45,6 +45,7 @@ def schur_tnn(l, x):
     '''
     d = len(l)
     # Construct the initial decomposition of U
+    # bdecomp = np.zeros((d, d+l[0]), dtype=np.float256)
     bdecomp = np.zeros((d, d+l[0]))
     for i in range(d):
         for j in range(d+l[0]):
@@ -72,18 +73,7 @@ def schur(l, x, method='tnn'):
         return schur_det(l, x)
     elif method == 'tnn':
         return schur_tnn(l, x)
-        
 
-# Some tests
-# Schur polynomial (2, 1)
-# 1 1   1 2
-# 2     2
-#print(schur((2, 1), [2/3, 1/3]))
-#print(schur_new((2, 1), [2/3, 1/3]))
-#print(schur((5, 2, 1), [1, 1, 1]))
-#print(schur_new((5, 2, 1), [1, 1, 1]))
-#print(schur((5, 2, 1, 1), [1, 1, 0.5, 0.5]))
-#print(schur_new((5, 2, 1, 1), [1, 1, 0.5, 0.5]))
 
 # Copied from https://stackoverflow.com/questions/10035752/elegant-python-code-for-integer-partitioning
 def partitions(n, l, I=1):
@@ -122,20 +112,22 @@ def partitions_ball(x0, dist, l1, I=0):
                 yield p + (i,)
 
 
-def optimize_brute(l, tol, smart=False, alpha=False, dist=0):
+def optimize_brute(l, tol, smart=False, alpha=False, dist=1):
     # try all s_l(x) for x which sums to 1,
     # up to a certain tolerance tol and then output the largest one.
     d = len(l)
     val = -np.inf
-    bounds = partitions_ball(alpha * tol, dist * tol, tol) if smart else partitions(tol, d)
+    # bounds = partitions_ball(alpha * tol, dist * tol, tol) if smart else partitions(tol, d)
+    bounds = partitions_ball(l, dist * tol, tol) if smart else partitions(tol, d)
     for y in bounds:
-        x = np.zeros(d)
-        for i in range(len(y)):
-            x[i] = y[i] / tol
-        newval = schur(l, x)
-        if(newval > val):
-            val = newval
-            best = x.copy()
+        if np.all(y):
+            x = np.zeros(d)
+            for i in range(len(y)):
+                x[i] = y[i] / tol
+            newval = schur(l, x)
+            if(newval > val):
+                val = newval
+                best = x.copy()
     return val, best
 
 def schur_opt(l):
@@ -163,9 +155,6 @@ def optimize(l, alpha):
 r'''
 Now the helper functions for comparing the two.
 '''
-
-
-
 def concavity_test(l):
     # test if s_l is concave in a silly way.
     # s_l is not concave (try (1,1,1))
@@ -192,4 +181,3 @@ def concavity_test(l):
 
 #print(optimize_brute((10, 10, 1), 50))
 #print(optimize((5, 5, 1), (0.5, 0.5, 0)))
-
