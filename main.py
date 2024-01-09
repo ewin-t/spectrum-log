@@ -52,8 +52,8 @@ if __name__ == '__main__':
     # n is the number of samples
     n = 80 # tol = n
     # tries is the number of times it will average over
-    tries = 24*12
-    dist_try = 0.5
+    tries = 300
+    dist_try = 1
 
     # d is the support size of the distribution
     ds = [3,4,5,6,7,8,9,10,11,12]
