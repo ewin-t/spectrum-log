@@ -44,17 +44,29 @@ def schur_tnn(l, x):
     into the matrix form described in (Eq. (14) of [CDEKK18]).
     '''
     d = len(l)
+
+    # handle the case when x contains 0
+    x_nnz = np.count_nonzero(x)
+    if np.count_nonzero(l) > x_nnz:
+        return 0
+    if x_nnz < d:
+        return schur_tnn(l[:x_nnz], x[:x_nnz])
+    
     # Construct the initial decomposition of U
-    # bdecomp = np.zeros((d, d+l[0]), dtype=np.float256)
-    bdecomp = np.zeros((d, d+l[0]))
+    # bdecomp = np.zeros((d, d+l[0]))
+    # for i in range(d):
+    #     for j in range(d+l[0]):
+    #         if(i == j):
+    #             bdecomp[i,j] = 1
+    #         if(i < j):
+    #             bdecomp[i,j] = x[i]
+    end_range = d + l[0]
+    bdecomp = np.concatenate((np.identity(d), np.zeros((d, l[0]))), axis=1)
     for i in range(d):
-        for j in range(d+l[0]):
-            if(i == j):
-                bdecomp[i,j] = 1
-            if(i < j):
-                bdecomp[i,j] = x[i]
+        bdecomp[i, i + 1:] = x[i] * np.ones(end_range - i - 1) # rewrite codes commented out above)
+
     # Construct the list of columns that need to be removed from U
-    to_remove = list(range(0, d+l[0]))[::-1]
+    to_remove = list(range(end_range))[::-1]
     for i in range(d):
         to_remove.remove(d - i - 1 + l[i]) # the indexing starts at zero
     #print(bdecomp)
@@ -120,14 +132,11 @@ def optimize_brute(l, tol, smart=False, alpha=False, dist=1):
     # bounds = partitions_ball(alpha * tol, dist * tol, tol) if smart else partitions(tol, d)
     bounds = partitions_ball(l, dist * tol, tol) if smart else partitions(tol, d)
     for y in bounds:
-        if np.all(y):
-            x = np.zeros(d)
-            for i in range(len(y)):
-                x[i] = y[i] / tol
-            newval = schur(l, x)
-            if(newval > val):
-                val = newval
-                best = x.copy()
+        x = np.array([y[i] / tol for i in range(len(y))])
+        newval = schur(l, x)
+        if(newval > val):
+            val = newval
+            best = x.copy()
     return val, best
 
 def schur_opt(l):
