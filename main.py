@@ -4,7 +4,7 @@ import rsk, mle
 import matplotlib.pyplot as plt
 from multiprocessing import Pool
 import os, time
-
+from itertools import repeat
 
 
 def tvdist(alpha, beta):
@@ -27,9 +27,8 @@ def one_test(n, alpha, dist_try, tol=None):
     
     mle_err_try = tvdist(alpha, est_mle_try)
 
-    print("(Running CPU {})\nEYD tableau: {} with error {}\nMLE tableau: {} with error {}".format(os.getpid(), 
-                                                                                                  l, np.round(eyd_err_try, decimals=4), 
-                                                                                                  est_mle_try * n, np.round(mle_err_try, decimals=4)), flush=True)
+    print("EYD tableau: {} with error {}\nMLE tableau: {} with error {}".format(l, np.round(eyd_err_try, decimals=4), 
+                                                                                est_mle_try * n, np.round(mle_err_try, decimals=4)), flush=True)
 
     return eyd_err_try, mle_err_try
 
@@ -51,14 +50,13 @@ if __name__ == '__main__':
     # We see a linear relationship between TV error and d, which is what we want
     # Since we expect err ~ d/sqrt(n).
     # n is the number of samples
-    n = 80
-    tol = 150
+    n = 80 # tol = n
     # tries is the number of times it will average over
-    tries = 24*8
-    dist_try = 1
+    tries = 24*12
+    dist_try = 0.5
 
     # d is the support size of the distribution
-    ds = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    ds = [3,4,5,6,7,8,9,10,11,12]
     # this will store the error of each estimator as a function of d
     eyds = []
     mles = []
@@ -72,7 +70,7 @@ if __name__ == '__main__':
 
         if threading:
             with Pool(os.cpu_count()) as pool:
-                zipret = pool.starmap(one_test, zip([n for i in range(tries)], [alpha for i in range(tries)], [dist_try for i in range(tries)]))
+                zipret = pool.starmap(one_test, zip([n for _ in range(tries)], repeat(alpha), repeat(dist_try)))
                 [eyd_err_all, mle_err_all] = list(zip(*zipret))
                 eyd_err = sum(eyd_err_all) / tries
                 mle_err = sum(mle_err_all) / tries
@@ -92,8 +90,6 @@ if __name__ == '__main__':
 
     print("EYDs", eyds) #, eyds[1]/eyds[0])
     print("MLEs", mles) #, mles[1]/mles[0])
-
-    # print("Total runtime: ", time.time() - start_time)
 
     plt.plot(ds, eyds, label="EYD")
     plt.plot(ds, mles, label="MLE")
