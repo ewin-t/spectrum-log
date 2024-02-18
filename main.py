@@ -50,13 +50,14 @@ if __name__ == '__main__':
     # We see a linear relationship between TV error and d, which is what we want
     # Since we expect err ~ d/sqrt(n).
     # n is the number of samples
-    n = 80 # tol = n
+    n = 120 # tol = n
     # tries is the number of times it will average over
-    tries = 300
-    dist_try = 1
+    tries = 150
+    dist_try = 0.5
+    tol = 80
 
     # d is the support size of the distribution
-    ds = [3,4,5,6,7,8,9,10,11,12]
+    ds = [3,4,5,6,7,8,9,10,11]
     # this will store the error of each estimator as a function of d
     eyds = []
     mles = []
@@ -64,13 +65,13 @@ if __name__ == '__main__':
         # alpha = np.ones(d) / d
         alpha = np.array(sorted(range(1, d+1), reverse=True))
         alpha = alpha / np.sum(alpha)
-        print("n=tol={}, tries={}, dist_try={}, d={}, alpha={}".format(n, tries, dist_try, d, alpha))
+        print("n={}, tol={}, tries={}, dist_try={}, d={}, alpha={}".format(n, tol, tries, dist_try, d, alpha))
         eyd_err = 0
         mle_err = 0
 
         if threading:
             with Pool(os.cpu_count()) as pool:
-                zipret = pool.starmap(one_test, zip([n for _ in range(tries)], repeat(alpha), repeat(dist_try)))
+                zipret = pool.starmap(one_test, zip([n for _ in range(tries)], repeat(alpha), repeat(dist_try), repeat(tol)))
                 [eyd_err_all, mle_err_all] = list(zip(*zipret))
                 eyd_err = sum(eyd_err_all) / tries
                 mle_err = sum(mle_err_all) / tries
