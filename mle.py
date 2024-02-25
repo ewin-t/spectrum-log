@@ -129,8 +129,8 @@ def optimize_brute(l, tol, smart=False, alpha=False, dist=1):
     # up to a certain tolerance tol and then output the largest one.
     d = len(l)
     val = -np.inf
-    # bounds = partitions_ball(alpha * tol, dist * tol, tol) if smart else partitions(tol, d)
-    bounds = partitions_ball(l, dist * tol, tol) if smart else partitions(tol, d)
+    bounds = partitions_ball(alpha * tol, dist * tol, tol) if smart else partitions(tol, d)
+    # bounds = partitions_ball(l, dist * tol, tol) if smart else partitions(tol, d)
     for y in bounds:
         x = np.array([y[i] / tol for i in range(len(y))])
         newval = schur(l, x)

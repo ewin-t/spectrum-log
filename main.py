@@ -50,11 +50,11 @@ if __name__ == '__main__':
     # We see a linear relationship between TV error and d, which is what we want
     # Since we expect err ~ d/sqrt(n).
     # n is the number of samples
-    n = 120 # tol = n
+    n = 100 # tol = n
     # tries is the number of times it will average over
-    tries = 150
-    dist_try = 0.5
-    tol = 80
+    tries = 300
+    dist_try = 0.4
+    tol = n
 
     # d is the support size of the distribution
     ds = [3,4,5,6,7,8,9,10,11]
@@ -63,7 +63,8 @@ if __name__ == '__main__':
     mles = []
     for d in ds:
         # alpha = np.ones(d) / d
-        alpha = np.array(sorted(range(1, d+1), reverse=True))
+        # alpha = np.array(sorted(range(1, d+1), reverse=True))
+        alpha = np.array([np.sqrt(d-i) for i in range(d)])
         alpha = alpha / np.sum(alpha)
         print("n={}, tol={}, tries={}, dist_try={}, d={}, alpha={}".format(n, tol, tries, dist_try, d, alpha))
         eyd_err = 0
