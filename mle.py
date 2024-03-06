@@ -139,6 +139,36 @@ def optimize_brute(l, tol, smart=False, alpha=False, dist=1):
             best = x.copy()
     return val, best
 
+
+def optimize_gradient(l, learning_rate=0.2, iterations=10000):
+    # implement gradient acsent and hope to find the global maximum
+    d = len(l)
+    n = sum(l)
+    x = np.array(l)/n
+    y = schur_tnn(l, x)
+
+    for i in range(iterations):
+        y_new = -np.inf
+        for idx1 in range(d - 1):
+            for idx2 in range(idx1 + 1, d):
+                for sgn in [1,-1]:
+                    dir = np.zeros(d)
+                    dir[idx1] = -1
+                    dir[idx2] = 1
+                    x_update = x + sgn * learning_rate / n * dir
+                    y_update = schur_tnn(l, x_update)
+                    if y_update > y_new:
+                        y_new = y_update
+                        x_new = x_update.copy()
+        if y_new > y:
+            y = y_new
+            x = x_new.copy()
+        else:
+            return y, np.sort(x)[::-1]
+
+    return y, np.sort(x)[::-1]
+
+
 def schur_opt(l):
     def opt_function(x):
         return -schur(l, x)
@@ -190,3 +220,10 @@ def concavity_test(l):
 
 #print(optimize_brute((10, 10, 1), 50))
 #print(optimize((5, 5, 1), (0.5, 0.5, 0)))
+
+
+if __name__=="__main__":
+    l = [27, 24, 14, 9, 4, 2]
+    y, x = optimize_gradient(l)
+    print(x)
+    print(schur_tnn(l, x))

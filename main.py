@@ -23,12 +23,17 @@ def one_test(n, alpha, dist_try, tol=None):
     est_eyd_try = rsk.eyd(l)
     eyd_err_try = tvdist(alpha, est_eyd_try)
 
-    brute_fun, est_mle_try = mle.optimize_brute(l, tol, smart=True, alpha=alpha, dist=dist_try)
+    _, est_mle_try = mle.optimize_gradient(l)
+    print("gradient: ", est_mle_try)
+    print(mle.schur_tnn(l, est_mle_try))
+    brute_x, est_mle_try_brute = mle.optimize_brute(l, tol, smart=True, alpha=alpha, dist=dist_try)
+    print("brute: ", est_mle_try_brute)
+    print(mle.schur_tnn(l, est_mle_try_brute))
     
     mle_err_try = tvdist(alpha, est_mle_try)
 
     print("EYD tableau: {} with error {}\nMLE tableau: {} with error {}".format(l, np.round(eyd_err_try, decimals=4), 
-                                                                                est_mle_try * n, np.round(mle_err_try, decimals=4)), flush=True)
+                                                                                np.array(est_mle_try) * n, np.round(mle_err_try, decimals=4)), flush=True)
 
     return eyd_err_try, mle_err_try
 
@@ -43,21 +48,22 @@ if __name__ == '__main__':
     #     sys.modules['__main__'] = main  # Ensures pickle lookups on __main__ find matching version
     
 
-    threading = True
+    threading = False
     print("CPU counts: ", os.cpu_count())
     start_time = time.time()
 
     # We see a linear relationship between TV error and d, which is what we want
     # Since we expect err ~ d/sqrt(n).
     # n is the number of samples
-    n = 100 # tol = n
+    n = 80 # tol = n
     # tries is the number of times it will average over
-    tries = 300
+    tries = 1000
     dist_try = 0.4
     tol = n
 
     # d is the support size of the distribution
-    ds = [3,4,5,6,7,8,9,10,11]
+    ds = [i for i in range(5,21)]
+    ds = [6]
     # this will store the error of each estimator as a function of d
     eyds = []
     mles = []
@@ -66,7 +72,8 @@ if __name__ == '__main__':
         # alpha = np.array(sorted(range(1, d+1), reverse=True))
         alpha = np.array([np.sqrt(d-i) for i in range(d)])
         alpha = alpha / np.sum(alpha)
-        print("n={}, tol={}, tries={}, dist_try={}, d={}, alpha={}".format(n, tol, tries, dist_try, d, alpha))
+        # print("n={}, tol={}, tries={}, dist_try={}, d={}, alpha={}".format(n, tol, tries, dist_try, d, alpha))
+        print("gradient ascent n={}, tries={}, d={}, alpha={}".format(n, tries, d, alpha))
         eyd_err = 0
         mle_err = 0
 
