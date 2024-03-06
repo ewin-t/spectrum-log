@@ -106,11 +106,12 @@ def optimize_brute(l, tol, alpha, smart=True, dist=0.5):
     return val, best
 
 
-def optimize_gradient(l, learning_rate=0.2, iterations=10000):
+def optimize_gradient(l, alpha, learning_rate=0.2, iterations=10000):
     # implement gradient/greedy acsent and hope to find the global maximum
     d = len(l)
     n = sum(l)
-    x = np.array(l)/n
+    # x = np.array(l)/n
+    x = alpha
     y = schur_tnn(l, x)
 
     for i in range(iterations):
@@ -122,21 +123,25 @@ def optimize_gradient(l, learning_rate=0.2, iterations=10000):
                     dir[idx1] = -1
                     dir[idx2] = 1
                     x_update = x + sgn * learning_rate / n * dir
-                    y_update = schur_tnn(l, x_update)
-                    if y_update > y_new:
-                        y_new = y_update
-                        x_new = x_update.copy()
+                    if not np.any(x_update < 0):
+                        y_update = schur_tnn(l, x_update)
+                        if y_update > y_new:
+                            y_new = y_update
+                            x_new = x_update.copy()
         if y_new > y:
             y = y_new
-            x = x_new.copy()
+            x = np.sort(x_new)[::-1]
         else:
             return y, np.sort(x)[::-1]
 
+    print("Not converged at iteration ", iterations)
     return y, np.sort(x)[::-1]
 
 
 if __name__=="__main__":
-    l = [27, 24, 14, 9, 4, 2]
+    # l = [27, 24, 14, 9, 4, 2]
+    l = [52, 45, 41, 35, 33, 28, 22, 20, 15, 9, 0]
     y, x = optimize_gradient(l)
     print(x)
     print(schur_tnn(l, x))
+
