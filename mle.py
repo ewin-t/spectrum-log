@@ -1,35 +1,7 @@
 import numpy as np
 import tnn
-import scipy.optimize as sopt
 
 
-def vander(x, shift, same):
-    '''
-    Output the Vandermonde matrix
-    M[i,j] = same[j]th derivative of (x[j] ** (shift[i] + n - 1 - i))
-    except when same[i] != 0
-    '''
-    d = len(x)
-    M = np.zeros((d, d))
-    for i in range(d):
-        for j in range(d):
-            power = shift[i] + d - 1 - i
-            M[i,j] = np.math.factorial(power)/np.math.factorial(power - same[j]) * (x[j] ** (power - same[j])) if power >= same[j] else 0
-    return M.T
-
-
-def schur_det(l, x):
-    d = len(x)
-    same = []
-    for i in range(d):
-        if(i > 0 and np.abs(x[i] - x[i-1]) < 1e-5):
-            same.append(same[-1] + 1)
-        else:
-            same.append(0)
-    Mvander = vander(x, np.zeros(d), same)
-    Mnum = vander(x, l, same)
-    return np.linalg.det(Mnum) / np.linalg.det(Mvander)
-        
 def schur_tnn(l, x):
     '''
     We rely on the observation of [CDEKK18], which states that
@@ -80,12 +52,6 @@ def schur_tnn(l, x):
         output *= bdecomp[i][i]
     return output
 
-def schur(l, x, method='tnn'):
-    if method == 'det':
-        return schur_det(l, x)
-    elif method == 'tnn':
-        return schur_tnn(l, x)
-
 
 # Copied from https://stackoverflow.com/questions/10035752/elegant-python-code-for-integer-partitioning
 def partitions(n, l, I=1):
@@ -124,7 +90,7 @@ def partitions_ball(x0, dist, l1, I=0):
                 yield p + (i,)
 
 
-def optimize_brute(l, tol, smart=False, alpha=False, dist=1):
+def optimize_brute(l, tol, alpha, smart=True, dist=0.5):
     # try all s_l(x) for x which sums to 1,
     # up to a certain tolerance tol and then output the largest one.
     d = len(l)
@@ -133,7 +99,7 @@ def optimize_brute(l, tol, smart=False, alpha=False, dist=1):
     # bounds = partitions_ball(l, dist * tol, tol) if smart else partitions(tol, d)
     for y in bounds:
         x = np.array([y[i] / tol for i in range(len(y))])
-        newval = schur(l, x)
+        newval = schur_tnn(l, x)
         if(newval > val):
             val = newval
             best = x.copy()
@@ -141,7 +107,7 @@ def optimize_brute(l, tol, smart=False, alpha=False, dist=1):
 
 
 def optimize_gradient(l, learning_rate=0.2, iterations=10000):
-    # implement gradient acsent and hope to find the global maximum
+    # implement gradient/greedy acsent and hope to find the global maximum
     d = len(l)
     n = sum(l)
     x = np.array(l)/n
@@ -167,59 +133,6 @@ def optimize_gradient(l, learning_rate=0.2, iterations=10000):
             return y, np.sort(x)[::-1]
 
     return y, np.sort(x)[::-1]
-
-
-def schur_opt(l):
-    def opt_function(x):
-        return -schur(l, x)
-    return opt_function
-
-def optimize(l, alpha):
-    # arg max_x s_l(x),
-    # subject to x >= 0 and \sum x = 1.
-    # alpha works as the start point
-    d = len(l)
-    bounds = d * [(0, 1.0),]
-    cons = sopt.LinearConstraint(d * [1], [1], [1])
-    soln = sopt.minimize(schur_opt(l),
-                         alpha,
-                         method='trust-constr',
-                         bounds=bounds,
-                         constraints=cons,
-                         options={'disp': True})#, 'initial_tr_radius': 0.5})
-    return soln.fun, sorted(soln.x, reverse=True)
-
-
-
-r'''
-Now the helper functions for comparing the two.
-'''
-def concavity_test(l):
-    # test if s_l is concave in a silly way.
-    # s_l is not concave (try (1,1,1))
-    d = len(l)
-    for t in range(1000):
-        x = np.random.random(d)
-        x.sort()
-        x = x[::-1]
-        x /= x.sum()
-        y = np.random.random(d)
-        y.sort()
-        y /= y.sum()
-        y = y[::-1]
-        z = (x + y) / 2
-        sx = schur(l, x)
-        sy = schur(l, y)
-        sz = schur(l, z)
-        if(sx + sy > 2 * sz):
-            print(t, x, y, sx, sy, sz)
-            return False
-    return True
-    
-#concavity_test((1,1, 1))
-
-#print(optimize_brute((10, 10, 1), 50))
-#print(optimize((5, 5, 1), (0.5, 0.5, 0)))
 
 
 if __name__=="__main__":
