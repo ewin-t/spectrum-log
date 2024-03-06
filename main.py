@@ -24,11 +24,11 @@ def one_test(n, alpha, dist_try, tol=None):
     eyd_err_try = tvdist(alpha, est_eyd_try)
 
     _, est_mle_try = mle.optimize_gradient(l)
-    print("gradient: ", est_mle_try)
-    print(mle.schur_tnn(l, est_mle_try))
-    brute_x, est_mle_try_brute = mle.optimize_brute(l, tol, smart=True, alpha=alpha, dist=dist_try)
-    print("brute: ", est_mle_try_brute)
-    print(mle.schur_tnn(l, est_mle_try_brute))
+    # print("gradient: ", est_mle_try)
+    # print(mle.schur_tnn(l, est_mle_try))
+    # _, est_mle_try_brute = mle.optimize_brute(l, tol, alpha, smart=True, dist=dist_try)
+    # print("brute: ", est_mle_try_brute)
+    # print(mle.schur_tnn(l, est_mle_try_brute))
     
     mle_err_try = tvdist(alpha, est_mle_try)
 
@@ -48,14 +48,14 @@ if __name__ == '__main__':
     #     sys.modules['__main__'] = main  # Ensures pickle lookups on __main__ find matching version
     
 
-    threading = False
+    threading = True
     print("CPU counts: ", os.cpu_count())
     start_time = time.time()
 
     # We see a linear relationship between TV error and d, which is what we want
     # Since we expect err ~ d/sqrt(n).
     # n is the number of samples
-    n = 80 # tol = n
+    n = 300 # tol = n
     # tries is the number of times it will average over
     tries = 1000
     dist_try = 0.4
@@ -63,7 +63,6 @@ if __name__ == '__main__':
 
     # d is the support size of the distribution
     ds = [i for i in range(5,21)]
-    ds = [6]
     # this will store the error of each estimator as a function of d
     eyds = []
     mles = []
