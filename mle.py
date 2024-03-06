@@ -1,35 +1,7 @@
 import numpy as np
 import tnn
-import scipy.optimize as sopt
 
 
-def vander(x, shift, same):
-    '''
-    Output the Vandermonde matrix
-    M[i,j] = same[j]th derivative of (x[j] ** (shift[i] + n - 1 - i))
-    except when same[i] != 0
-    '''
-    d = len(x)
-    M = np.zeros((d, d))
-    for i in range(d):
-        for j in range(d):
-            power = shift[i] + d - 1 - i
-            M[i,j] = np.math.factorial(power)/np.math.factorial(power - same[j]) * (x[j] ** (power - same[j])) if power >= same[j] else 0
-    return M.T
-
-
-def schur_det(l, x):
-    d = len(x)
-    same = []
-    for i in range(d):
-        if(i > 0 and np.abs(x[i] - x[i-1]) < 1e-5):
-            same.append(same[-1] + 1)
-        else:
-            same.append(0)
-    Mvander = vander(x, np.zeros(d), same)
-    Mnum = vander(x, l, same)
-    return np.linalg.det(Mnum) / np.linalg.det(Mvander)
-        
 def schur_tnn(l, x):
     '''
     We rely on the observation of [CDEKK18], which states that
@@ -44,17 +16,29 @@ def schur_tnn(l, x):
     into the matrix form described in (Eq. (14) of [CDEKK18]).
     '''
     d = len(l)
+
+    # handle the case when x contains 0
+    x_nnz = np.count_nonzero(x)
+    if np.count_nonzero(l) > x_nnz:
+        return 0
+    if x_nnz < d:
+        return schur_tnn(l[:x_nnz], x[:x_nnz])
+    
     # Construct the initial decomposition of U
-    # bdecomp = np.zeros((d, d+l[0]), dtype=np.float256)
-    bdecomp = np.zeros((d, d+l[0]))
+    # bdecomp = np.zeros((d, d+l[0]))
+    # for i in range(d):
+    #     for j in range(d+l[0]):
+    #         if(i == j):
+    #             bdecomp[i,j] = 1
+    #         if(i < j):
+    #             bdecomp[i,j] = x[i]
+    end_range = d + l[0]
+    bdecomp = np.concatenate((np.identity(d), np.zeros((d, l[0]))), axis=1)
     for i in range(d):
-        for j in range(d+l[0]):
-            if(i == j):
-                bdecomp[i,j] = 1
-            if(i < j):
-                bdecomp[i,j] = x[i]
+        bdecomp[i, i + 1:] = x[i] * np.ones(end_range - i - 1) # rewrite codes commented out above)
+
     # Construct the list of columns that need to be removed from U
-    to_remove = list(range(0, d+l[0]))[::-1]
+    to_remove = list(range(end_range))[::-1]
     for i in range(d):
         to_remove.remove(d - i - 1 + l[i]) # the indexing starts at zero
     #print(bdecomp)
@@ -67,12 +51,6 @@ def schur_tnn(l, x):
     for i in range(d):
         output *= bdecomp[i][i]
     return output
-
-def schur(l, x, method='tnn'):
-    if method == 'det':
-        return schur_det(l, x)
-    elif method == 'tnn':
-        return schur_tnn(l, x)
 
 
 # Copied from https://stackoverflow.com/questions/10035752/elegant-python-code-for-integer-partitioning
@@ -112,72 +90,58 @@ def partitions_ball(x0, dist, l1, I=0):
                 yield p + (i,)
 
 
-def optimize_brute(l, tol, smart=False, alpha=False, dist=1):
+def optimize_brute(l, tol, alpha, smart=True, dist=0.5):
     # try all s_l(x) for x which sums to 1,
     # up to a certain tolerance tol and then output the largest one.
     d = len(l)
     val = -np.inf
-    # bounds = partitions_ball(alpha * tol, dist * tol, tol) if smart else partitions(tol, d)
-    bounds = partitions_ball(l, dist * tol, tol) if smart else partitions(tol, d)
+    bounds = partitions_ball(alpha * tol, dist * tol, tol) if smart else partitions(tol, d)
+    # bounds = partitions_ball(l, dist * tol, tol) if smart else partitions(tol, d)
     for y in bounds:
-        if np.all(y):
-            x = np.zeros(d)
-            for i in range(len(y)):
-                x[i] = y[i] / tol
-            newval = schur(l, x)
-            if(newval > val):
-                val = newval
-                best = x.copy()
+        x = np.array([y[i] / tol for i in range(len(y))])
+        newval = schur_tnn(l, x)
+        if(newval > val):
+            val = newval
+            best = x.copy()
     return val, best
 
-def schur_opt(l):
-    def opt_function(x):
-        return -schur(l, x)
-    return opt_function
 
-def optimize(l, alpha):
-    # arg max_x s_l(x),
-    # subject to x >= 0 and \sum x = 1.
-    # alpha works as the start point
+def optimize_gradient(l, alpha, learning_rate=0.2, iterations=10000):
+    # implement gradient/greedy acsent and hope to find the global maximum
     d = len(l)
-    bounds = d * [(0, 1.0),]
-    cons = sopt.LinearConstraint(d * [1], [1], [1])
-    soln = sopt.minimize(schur_opt(l),
-                         alpha,
-                         method='trust-constr',
-                         bounds=bounds,
-                         constraints=cons,
-                         options={'disp': True})#, 'initial_tr_radius': 0.5})
-    return soln.fun, sorted(soln.x, reverse=True)
+    n = sum(l)
+    # x = np.array(l)/n
+    x = alpha
+    y = schur_tnn(l, x)
+
+    for i in range(iterations):
+        y_new = -np.inf
+        for idx1 in range(d - 1):
+            for idx2 in range(idx1 + 1, d):
+                for sgn in [1,-1]:
+                    dir = np.zeros(d)
+                    dir[idx1] = -1
+                    dir[idx2] = 1
+                    x_update = x + sgn * learning_rate / n * dir
+                    if not np.any(x_update < 0):
+                        y_update = schur_tnn(l, x_update)
+                        if y_update > y_new:
+                            y_new = y_update
+                            x_new = x_update.copy()
+        if y_new > y:
+            y = y_new
+            x = np.sort(x_new)[::-1]
+        else:
+            return y, np.sort(x)[::-1]
+
+    print("Not converged at iteration ", iterations)
+    return y, np.sort(x)[::-1]
 
 
+if __name__=="__main__":
+    # l = [27, 24, 14, 9, 4, 2]
+    l = [52, 45, 41, 35, 33, 28, 22, 20, 15, 9, 0]
+    y, x = optimize_gradient(l)
+    print(x)
+    print(schur_tnn(l, x))
 
-r'''
-Now the helper functions for comparing the two.
-'''
-def concavity_test(l):
-    # test if s_l is concave in a silly way.
-    # s_l is not concave (try (1,1,1))
-    d = len(l)
-    for t in range(1000):
-        x = np.random.random(d)
-        x.sort()
-        x = x[::-1]
-        x /= x.sum()
-        y = np.random.random(d)
-        y.sort()
-        y /= y.sum()
-        y = y[::-1]
-        z = (x + y) / 2
-        sx = schur(l, x)
-        sy = schur(l, y)
-        sz = schur(l, z)
-        if(sx + sy > 2 * sz):
-            print(t, x, y, sx, sy, sz)
-            return False
-    return True
-    
-#concavity_test((1,1, 1))
-
-#print(optimize_brute((10, 10, 1), 50))
-#print(optimize((5, 5, 1), (0.5, 0.5, 0)))

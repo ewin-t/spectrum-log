@@ -4,7 +4,7 @@ import rsk, mle
 import matplotlib.pyplot as plt
 from multiprocessing import Pool
 import os, time
-
+from itertools import repeat
 
 
 def tvdist(alpha, beta):
@@ -23,13 +23,17 @@ def one_test(n, alpha, dist_try, tol=None):
     est_eyd_try = rsk.eyd(l)
     eyd_err_try = tvdist(alpha, est_eyd_try)
 
-    brute_fun, est_mle_try = mle.optimize_brute(l, tol, smart=True, alpha=alpha, dist=dist_try)
+    _, est_mle_try = mle.optimize_gradient(l, alpha)
+    # print("gradient: ", est_mle_try)
+    # print(mle.schur_tnn(l, est_mle_try))
+    # _, est_mle_try_brute = mle.optimize_brute(l, tol, alpha, smart=True, dist=dist_try)
+    # print("brute: ", est_mle_try_brute)
+    # print(mle.schur_tnn(l, est_mle_try_brute))
     
     mle_err_try = tvdist(alpha, est_mle_try)
 
-    print("(Running CPU {})\nEYD tableau: {} with error {}\nMLE tableau: {} with error {}".format(os.getpid(), 
-                                                                                                  l, np.round(eyd_err_try, decimals=4), 
-                                                                                                  est_mle_try * n, np.round(mle_err_try, decimals=4)), flush=True)
+    print("EYD tableau: {} with error {}\nMLE tableau: {} with error {}".format(l, np.round(eyd_err_try, decimals=4), 
+                                                                                np.array(est_mle_try) * n, np.round(mle_err_try, decimals=4)), flush=True)
 
     return eyd_err_try, mle_err_try
 
@@ -51,28 +55,30 @@ if __name__ == '__main__':
     # We see a linear relationship between TV error and d, which is what we want
     # Since we expect err ~ d/sqrt(n).
     # n is the number of samples
-    n = 80
-    tol = 150
+    n = 100 # tol = n
     # tries is the number of times it will average over
-    tries = 24*8
-    dist_try = 1
+    tries = 300
+    dist_try = 0.4
+    tol = n
 
     # d is the support size of the distribution
-    ds = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+    ds = [i for i in range(3,13)]
     # this will store the error of each estimator as a function of d
     eyds = []
     mles = []
     for d in ds:
         # alpha = np.ones(d) / d
-        alpha = np.array(sorted(range(1, d+1), reverse=True))
+        # alpha = np.array(sorted(range(1, d+1), reverse=True))
+        alpha = np.array([np.sqrt(d-i) for i in range(d)])
         alpha = alpha / np.sum(alpha)
-        print("n=tol={}, tries={}, dist_try={}, d={}, alpha={}".format(n, tries, dist_try, d, alpha))
+        # print("n={}, tol={}, tries={}, dist_try={}, d={}, alpha={}".format(n, tol, tries, dist_try, d, alpha))
+        print("gradient ascent n={}, tries={}, d={}, alpha={}".format(n, tries, d, alpha))
         eyd_err = 0
         mle_err = 0
 
         if threading:
             with Pool(os.cpu_count()) as pool:
-                zipret = pool.starmap(one_test, zip([n for i in range(tries)], [alpha for i in range(tries)], [dist_try for i in range(tries)]))
+                zipret = pool.starmap(one_test, zip([n for _ in range(tries)], repeat(alpha), repeat(dist_try), repeat(tol)))
                 [eyd_err_all, mle_err_all] = list(zip(*zipret))
                 eyd_err = sum(eyd_err_all) / tries
                 mle_err = sum(mle_err_all) / tries
@@ -92,8 +98,6 @@ if __name__ == '__main__':
 
     print("EYDs", eyds) #, eyds[1]/eyds[0])
     print("MLEs", mles) #, mles[1]/mles[0])
-
-    # print("Total runtime: ", time.time() - start_time)
 
     plt.plot(ds, eyds, label="EYD")
     plt.plot(ds, mles, label="MLE")
