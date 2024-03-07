@@ -55,14 +55,14 @@ if __name__ == '__main__':
     # We see a linear relationship between TV error and d, which is what we want
     # Since we expect err ~ d/sqrt(n).
     # n is the number of samples
-    n = 100 # tol = n
+    n = 300 # tol = n
     # tries is the number of times it will average over
     tries = 300
     dist_try = 0.4
     tol = n
 
     # d is the support size of the distribution
-    ds = [i for i in range(3,13)]
+    ds = [i for i in range(5,21)]
     # this will store the error of each estimator as a function of d
     eyds = []
     mles = []
