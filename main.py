@@ -5,12 +5,7 @@ import matplotlib.pyplot as plt
 from multiprocessing import Pool
 import os, time
 from itertools import repeat
-
-
-def tvdist(alpha, beta):
-    # computes the TV distance between alpha and beta
-    # alpha and beta should be sorted when 
-    return np.sum(np.abs(np.array(sorted(alpha)) - np.array(sorted(beta)))) / 2
+from rsk import tvdist
 
 
 def one_test(n, alpha, dist_try, tol=None):
@@ -47,7 +42,6 @@ if __name__ == '__main__':
     #     globals().update(vars(main))  # Replaces current contents with newly imported stuff
     #     sys.modules['__main__'] = main  # Ensures pickle lookups on __main__ find matching version
     
-
     threading = True
     print("CPU counts: ", os.cpu_count())
     start_time = time.time()

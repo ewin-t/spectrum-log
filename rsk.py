@@ -1,6 +1,12 @@
 import numpy as np
 
 
+def tvdist(alpha, beta):
+    # computes the TV distance between alpha and beta
+    # alpha and beta should be sorted when 
+    return np.sum(np.abs(np.array(sorted(alpha)) - np.array(sorted(beta)))) / 2
+
+
 def generate_tableau(alpha, n):
     d = len(alpha)
     np.random.seed()
