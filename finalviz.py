@@ -46,7 +46,7 @@ xfit = np.linspace(0, 50, 1000)
 yfit = 1.39 * (xfit ** 1.01) + 0.56
 axs[2].plot(xfit, yfit, color='tab:green', lw=1)
 
-plt.savefig("fig1.svg")
+plt.savefig("fig1.svg", bbox_inches='tight')
 
 # add text box for the statistics
 # stats = (f'$\\mu$ = {np.mean(y):.2f}\n'
