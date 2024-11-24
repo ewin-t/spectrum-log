@@ -11,3 +11,5 @@ The main experiment is conducted using the script `test_two_dist.py`. This scrip
 The `schur.py` script contains the main function for evaluating a schur polynomial. 
 
 The `rsk.py` script contains the main function for performing the RSK algorithm. 
+
+The `fit_plot.py` script is used for curve fitting and generating plots based on the experimental data from `test_two_dist.py`.
