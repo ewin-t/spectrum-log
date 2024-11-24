@@ -1,3 +1,9 @@
+"""
+This script translated the the MATLAB code used in [CDEKK18] to Python, which computes the Schur polynomial s_lambda(x) using the bi-diagonal decomposition of a totally non-negative (TNN) matrix U.
+
+The original MATLAB code can be found on Plamen Koev's website. 
+"""
+
 import numpy as np
 
 r'''
@@ -24,7 +30,6 @@ while (i<n)&(b(i+1)~=0)
    i=i+1;
 end
 '''
-
 def dqd2(b, c):
     flag = False
     # Subroutine for 4.1
@@ -49,6 +54,7 @@ def dqd2(b, c):
         print(c)
         exit()
     return i
+
 
 r'''
 % function B=TNAddToNext(B,x,i)
@@ -97,7 +103,6 @@ while (z<min(i-1,n)) & ((z==0) | (B(i-1,z)==0))
    z=z+q;
 end
 '''
-
 def bd_multiply(bd, x, i):
     '''
     Find the BD decomposition for A * e_i(x), where bd is the decomposition for A.
@@ -126,6 +131,7 @@ def bd_multiply(bd, x, i):
                 bd[j+i-1, z+j+1-1] = c[j+1-1]
         i += q-1
         z += q
+
 
 r'''
 function B=TNSubmatrix(B,i)
@@ -156,7 +162,6 @@ end
 
 B=B([1:i-1,i+1:m],:);
 '''
-
 def remove_row(bd, ind):
     m, n = bd.shape
     ind += 1 # 1-indexing
@@ -171,4 +176,58 @@ def remove_row(bd, ind):
         for j in range(ind+1, n+1):
             bd_multiply(bd[ind+1-1:,ind-1:].T, bd[ind-1, j-1], j-ind+1)
     return np.delete(bd, ind-1, 0)
+
+
+def schur_tnn(l, x):
+    """
+    Computes the Schur polynomial s_lambda(x) using the bi-diagonal decomposition
+    of a totally non-negative (TNN) matrix U.
+
+    Parameters:
+    l (list or array-like): A list or array of integers representing the partition lambda.
+    x (list or array-like): A list or array of non-negative numbers.
+
+    Returns:
+    float: The value of the Schur polynomial s_lambda(x).
+
+    References:
+    [CDEKK18] - Citation for the observation and decomposition method used.
+
+    Notes:
+    - The function relies on the observation that s_lambda(x) = det(V), where V is a submatrix
+      of the upper triangular matrix U defined by U_{i,j} = h_{i-j}(x), with h_i(x) being the
+      complete symmetric polynomial, indexed by columns n+lambda_1, n-1+lambda_2, ...
+    - The matrix U is totally non-negative and can be decomposed into a bi-diagonal form for
+      efficient computation (Eq. (14) of [CDEKK18]).
+    - If the number of non-zero elements in x is less than the length of l, the function
+      recursively reduces the problem size.
+    - The determinant of the resulting matrix is computed as the product of its diagonal entries.
+    """
+    d = len(l)
+
+    # handle the case when x contains 0
+    x_nnz = np.count_nonzero(x)
+    if np.count_nonzero(l) > x_nnz:
+        return 0
+    if x_nnz < d:
+        return schur_tnn(l[:x_nnz], x[:x_nnz])
+    
+    # Construct the initial decomposition of U
+    end_range = d + l[0]
+    bdecomp = np.concatenate((np.identity(d), np.zeros((d, l[0]))), axis=1)
+    for i in range(d):
+        bdecomp[i, i + 1:] = x[i] * np.ones(end_range - i - 1)
+
+    # Construct the list of columns that need to be removed from U
+    to_remove = list(range(end_range))[::-1]
+    for i in range(d):
+        to_remove.remove(d - i - 1 + l[i]) # the indexing starts at zero
+    for i in to_remove:
+        bdecomp = remove_row(bdecomp.T, i).T
+
+    # The determinant is the product of the diagonal entries in the BD matrix
+    output = 1
+    for i in range(d):
+        output *= bdecomp[i][i]
+    return output
 

@@ -1,17 +1,13 @@
-# spectrum-log
+This repository contains the code for Section 6 of the paper "Beating full state tomography for unentangled spectrum estimation".
 
-## trials
+## Main Experiment
 
-n = 200, tol = 100, tries = 100
+The main experiment is conducted using the script `test_two_dist.py`. This script performs the following tasks:
+- Simulate two distributions that match on the first two moments.
+- Run the maximum likelihood tester. 
 
-ds [3, 4, 5, 6]
-EYDs [0.0383, 0.0455, 0.052966666666666676, 0.059735714285714295]
-MLEs [0.04673333333333332, 0.06269999999999996, 0.06883333333333336, 0.07468095238095242]
+## Main Functions
 
----
+The `schur.py` script contains the main function for evaluating a schur polynomial. 
 
-n = 100, tol = 150, tries = 10
-
-ds [5, 10]
-EYDs [0.09533333333333334, 0.15236363636363637]
-MLEs [0.020000000000000007, 0.024606060606060597]
+The `rsk.py` script contains the main function for performing the RSK algorithm. 
