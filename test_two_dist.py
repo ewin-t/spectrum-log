@@ -61,7 +61,7 @@ def one_test_error(n, x1, x2):
     l1 = rsk.generate_tableau(x1, n)
     l2 = rsk.generate_tableau(x2, n)
     error_1 = int(schur.schur_tnn(l1, x1) < schur.schur_tnn(l1, x2))
-    error_2 = int(schur.schur_tnn(l2, x1) > schur.schur_tnn(l2, x2))
+    error_2 = int(schur.schur_tnn(l2, x1) >= schur.schur_tnn(l2, x2))
     return (error_1 + error_2) / 2
 
 
