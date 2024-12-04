@@ -67,19 +67,19 @@ def one_test_error(n, x1, x2):
 
 if __name__=="__main__":
     threshold = 0.3
-    iterations = 10000
+    iterations = 100000
     print("CPU counts: ", os.cpu_count())
     print("Threshold = {} and iterations = {}".format(threshold, iterations))
-    ds = [3 * i for i in range(1, 20)]
+    ds = [3 * i for i in range(1, 21)]
     best_ns = []
 
-    predicted_scalar = 2.14
+    predicted_scalar = 2.15
 
     for d in ds:
         print("Running d = ", d)
         predicted_n = int(predicted_scalar * d**(4/3))
         start = max(0, predicted_n - 6)
-        end = predicted_n + 6
+        end = predicted_n + 2
 
         x1, x2 = generate_distributions(d)
 

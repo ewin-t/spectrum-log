@@ -214,7 +214,7 @@ def schur_tnn(l, x):
     
     # Construct the initial decomposition of U
     end_range = d + l[0]
-    bdecomp = np.concatenate((np.identity(d), np.zeros((d, l[0]))), axis=1)
+    bdecomp = np.concatenate((np.identity(d), np.zeros((d, l[0]))), axis=1, dtype=np.longdouble)
     for i in range(d):
         bdecomp[i, i + 1:] = x[i] * np.ones(end_range - i - 1)
 
