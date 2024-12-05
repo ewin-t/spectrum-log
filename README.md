@@ -1,4 +1,4 @@
-This repository contains the code for Section 8 of the paper "Beating full state tomography for unentangled spectrum estimation".
+This repository contains the code for Section 8 of the paper "Beating full state tomography for unentangled spectrum estimation" by Angelos Pelecanos, Xinyu Tan, Ewin Tang, and John Wright.
 
 ## Main Experiment
 
