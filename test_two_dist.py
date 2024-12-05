@@ -1,15 +1,16 @@
 """
-This script generates two distributions that match on the first two moments and computes the error rate for a given number of boxes in the tableaux generated from these distributions. 
+This script generates two distributions that match on the first moments (up to 3) and computes the error rate for a given number of boxes in the tableaux generated from these distributions. 
 It then searches for the optimal number of boxes such that the error rate is below a specified threshold.
 
 Functions:
-    generate_distributions(d):
-        Generates two distributions based on the input parameter d.
+    generate_distributions(d, k):
+        Generates two distributions of length d which match on the first k moments. 
 
     one_test_error(n, x1, x2):
 
 Main Execution:
     - Sets a threshold and number of iterations.
+    - Specify the number of matching moments. 
     - Iterates over a range of distribution sizes.
     - For each size, predicts an initial number of boxes and adjusts the search window to find the optimal number of boxes.
     - Uses multiprocessing to parallelize the error rate computation.
@@ -24,24 +25,33 @@ import os
 from itertools import repeat
 
 
-def generate_distributions(d):    
+def generate_distributions(d, k):    
     """
-    Generate two distributions which match on the first two moments based on the input parameter d.
+    Generate two distributions which match on the first several moments.
 
     Parameters:
-    d (int): The size of the distributions to generate. Must be a multiple of 3.
+    d (int): The size of the distributions to generate. Must be a multiple of (k + 1).
+    k (int): The number of moments that the returned two distributions should match on. 
 
     Returns:
-    tuple: A tuple containing two numpy arrays:
-        - x1: A numpy array where the first 2/3 of the elements are set to 3/2/d and the rest are zeros.
-        - x2: A numpy array where the first 1/3 of the elements are set to 2/d and the rest are set to 1/2/d.
+    tuple: A tuple containing two numpy arrays x1 and x2, each of length d, and they match on the first k moments. 
     """
-    x1 = np.zeros(d)
-    x1[:2*int(d/3)] = 3/2/d
+    assert(d % (k+1) == 0)
 
-    x2 = np.zeros(d)
-    x2[:int(d/3)] = 3/2/d
-    x2 += 1/2/d
+    x1, x2 = np.zeros(d), np.zeros(d)
+    if k == 1:
+        x1 = np.ones(d)/d
+        x2[:int(d/2)] = 2/d
+    elif k == 2:
+        x1[:2*int(d/3)] = 3/2/d
+        x2[:int(d/3)] = 3/2/d
+        x2 += 1/2/d
+    elif k == 3:
+        x1[:int(d/2)] = (1+1/np.sqrt(2))/d
+        x1[int(d/2):] = (1-1/np.sqrt(2))/d
+        x1 = x1 / np.sum(x1)
+        x2[:int(d/4)] = 2/d
+        x2[int(d/4):3*int(d/4)] = 1/d
 
     return x1, x2
 
@@ -68,20 +78,39 @@ def one_test_error(n, x1, x2):
 if __name__=="__main__":
     threshold = 0.3
     iterations = 100000
+    matching_moment = 3
+    assert(matching_moment <= 3)
+
     print("CPU counts: ", os.cpu_count())
     print("Threshold = {} and iterations = {}".format(threshold, iterations))
-    ds = [3 * i for i in range(1, 21)]
-    best_ns = []
+    print("Two distributions match on their first {} moments".format(matching_moment))
 
-    predicted_scalar = 2.15
+    if matching_moment == 1:
+        predicted_scalar = 1.46
+        predicted_power = 1
+        predicted_offset = 0.17
+        ds = [2 * i for i in range(3, 25)]
+    elif matching_moment == 2:
+        predicted_scalar = 2.16
+        predicted_power = 4/3
+        predicted_offset = -4.29
+        ds = [3 * i for i in range(1, 17)]
+    elif matching_moment == 3:
+        predicted_scalar = 2.37
+        predicted_power = 3/2
+        predicted_offset = -3
+        ds = [4 * i for i in range(9, 16)]
+    
+    best_ns = []
 
     for d in ds:
         print("Running d = ", d)
-        predicted_n = int(predicted_scalar * d**(4/3))
-        start = max(0, predicted_n - 6)
-        end = predicted_n + 2
+        predicted_n = int(predicted_scalar * d ** predicted_power - predicted_offset)
+        start = max(0, predicted_n - 4)
+        end = predicted_n + 4
 
-        x1, x2 = generate_distributions(d)
+        x1, x2 = generate_distributions(d, matching_moment)
+        print(x1, x2)
 
         while True: # find a search window for n such that when n=start, error_rate > threshold
             with Pool(os.cpu_count()) as pool:
