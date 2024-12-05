@@ -3,7 +3,7 @@ This repository contains the code for Section 6 of the paper "Beating full state
 ## Main Experiment
 
 The main experiment is conducted using the script `test_two_dist.py`. This script performs the following tasks:
-- Simulate two distributions that match on the first two moments.
+- Simulate two distributions that match on the first k moments, with k up to 3.
 - Run the maximum likelihood tester. 
 
 ## Main Functions
