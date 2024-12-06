@@ -35,7 +35,7 @@ def subplot_data(x, y, labels):
     axs[0].set_ylabel('Number of samples $n$')
     axs[0].set_xlabel('Dimension $d$')
     for ax, label in zip(axs.flat, labels):
-        ax.text(0.05, 0.95, label, fontsize=10, transform=ax.transAxes, va='top')
+        ax.text(0.05, 0.95, label, fontsize=14, transform=ax.transAxes, va='top')
         ax.scatter(x, y, color='black', s=20)
     
         # Remove axis lines.
@@ -45,6 +45,7 @@ def subplot_data(x, y, labels):
 
 if __name__=="__main__":
     plt.rcParams['font.family'] = 'inconsolata'
+    plt.rcParams['font.size'] = '14'
     plt.rcParams["mathtext.default"] = 'regular'
     xfit = np.linspace(0, 750, 1501)
 
@@ -54,7 +55,7 @@ if __name__=="__main__":
     n = np.array([9, 12, 15, 18, 20, 24, 26, 29, 32, 35, 38, 41, 44, 47, 50, 53, 56, 59, 62, 64, 68, 71])
 
     fig, axs = subplot_data(d, n, ['', 'Linear fit\n  $\mathregular{n = 1.47d - 0.06}$', 'Power law fit\n  $n = 1.26d^{1.04} + 1.08$'])
-    fig.suptitle('Sample complexity of distinguishing uniform vs half-uniform', x=0.1, y=0.95, ha='left', weight='semibold')
+    fig.suptitle('Sample complexity of distinguishing uniform vs half-uniform', x=0.1, y=0.95, ha='left', fontsize='16')
     axs[0].set(xlim=(0, 50), ylim=(0, 72))
     axs[0].set(xticks=(0, 10, 20, 30, 40, 50), yticks=(0, 10, 20, 30, 40, 50, 60, 70))
 
@@ -70,7 +71,7 @@ if __name__=="__main__":
     n = np.array([21, 37, 56, 76, 97, 120, 145, 171, 196, 223, 253, 281, 312, 342, 376])
 
     fig, axs = subplot_data(d, n, ['Linear fit\n  $n = 8.50d - 49.10$', '4/3 fit\n  $n = 2.16d^{4/3} - 4.29$', 'Power law fit\n  $n = 1.85d^{1.37} - 0.34$'])
-    fig.suptitle('Sample complexity of distinguishing distributions with matching second moments', x=0.1, y=0.95, ha='left', weight='semibold')
+    fig.suptitle('Sample complexity of distinguishing distributions with matching second moments', x=0.1, y=0.95, ha='left', fontsize='16')
     axs[0].set(xlim=(0, 50), ylim=(0, 400))
     axs[0].set(xticks=(0, 10, 20, 30, 40, 50), yticks=(0, 100, 200, 300, 400))
 
@@ -88,7 +89,7 @@ if __name__=="__main__":
     n = np.array([19, 51, 95, 147, 209, 274, 347, 426, 511, 598])
 
     fig, axs = subplot_data(d, n, ['4/3 fit\n  $n = 4.47d^{4/3} - 25.60$', '3/2 fit\n  $n = 2.37d^{3/2} - 3.04$', 'Power law fit\n  $n = 2.12d^{1.53} - 0.58$'])
-    fig.suptitle('Sample complexity of distinguishing distributions with matching third moments', x=0.1, y=0.95, ha='left', weight='semibold')
+    fig.suptitle('Sample complexity of distinguishing distributions with matching third moments', x=0.1, y=0.95, ha='left', fontsize='16')
     axs[0].set(xlim=(0, 45), ylim=(0, 650))
     axs[0].set(xticks=(0, 10, 20, 30, 40), yticks=(0, 100, 200, 300, 400, 500, 600))
 
