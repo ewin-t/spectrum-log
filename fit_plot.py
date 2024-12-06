@@ -44,7 +44,8 @@ def subplot_data(x, y, labels):
     return fig, axs
 
 if __name__=="__main__":
-    plt.rcParams['font.family'] = 'fira code'
+    plt.rcParams['font.family'] = 'inconsolata'
+    plt.rcParams["mathtext.default"] = 'regular'
     xfit = np.linspace(0, 750, 1501)
 
     # testing task between uniform vs half uniform (they match on the first moment)
@@ -52,7 +53,7 @@ if __name__=="__main__":
     d = np.array([2*i for i in range(3, 25)])
     n = np.array([9, 12, 15, 18, 20, 24, 26, 29, 32, 35, 38, 41, 44, 47, 50, 53, 56, 59, 62, 64, 68, 71])
 
-    fig, axs = subplot_data(d, n, ['', 'Linear fit\n  $n = 1.47d - 0.06$', 'Power law fit\n  $n = 1.26d^{1.04} + 1.08$'])
+    fig, axs = subplot_data(d, n, ['', 'Linear fit\n  $\mathregular{n = 1.47d - 0.06}$', 'Power law fit\n  $n = 1.26d^{1.04} + 1.08$'])
     fig.suptitle('Sample complexity of distinguishing uniform vs half-uniform', x=0.1, y=0.95, ha='left', weight='semibold')
     axs[0].set(xlim=(0, 50), ylim=(0, 72))
     axs[0].set(xticks=(0, 10, 20, 30, 40, 50), yticks=(0, 10, 20, 30, 40, 50, 60, 70))
